@@ -6,7 +6,7 @@ import { FormInfoUser } from '../form-add-user';
 export default function AddUserPage() {
   return (
     <Container>
-      <Typography variant="h3">Add New User</Typography>
+      <Typography variant="h4">Add New User</Typography>
       <FormInfoUser />
     </Container>
   );

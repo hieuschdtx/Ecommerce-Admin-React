@@ -1,75 +1,54 @@
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect } from 'react';
 
-import Card from '@mui/material/Card';
-import Stack from '@mui/material/Stack';
-import Table from '@mui/material/Table';
-import Button from '@mui/material/Button';
-import Container from '@mui/material/Container';
-import TableBody from '@mui/material/TableBody';
-import Typography from '@mui/material/Typography';
-import TableContainer from '@mui/material/TableContainer';
-import TablePagination from '@mui/material/TablePagination';
-
-import { RouterLink } from 'src/routes/components';
-
-import { fDateTime } from 'src/utils/format-time';
-
-import { userService } from 'src/apis/user-service';
+import {
+  Button,
+  Card,
+  Container,
+  Stack,
+  Table,
+  TableBody,
+  TableContainer,
+  TablePagination,
+  Typography,
+} from '@mui/material';
 
 import Iconify from 'src/components/iconify';
 import Scrollbar from 'src/components/scrollbar';
-
-import { emptyRows, getComparator } from 'src/utils/untils';
+import { RouterLink } from 'src/routes/components';
+import { fDateTime } from 'src/utils/format-time';
 import TableNoData from 'src/components/table-no-data/table-no-data';
+import { emptyRows, getComparator } from 'src/utils/untils';
+import { CategoryService } from 'src/apis/category-service';
 import { TableToolBar } from 'src/components/table-toolbar';
 import { TableEmptyRow } from 'src/components/table-empty-row';
 import TableDataHead from 'src/components/table-head/table-head';
-import UserTableRow from '../user-table-row';
-import { applyFilter } from '../filter-user';
+import { applyFilter } from '../filter-category';
+// import CategoryTableHead from '../category-table-head';
+import CategoriesTableRow from '../category-table-row';
 
-// ----------------------------------------------------------------------
-
-const UserPage = () => {
-  const [userData, setUserData] = useState([]);
-
+export default function CategoriesView() {
+  const [categoriesData, setCategoriesData] = useState([]);
+  const [filterName, setFilterName] = useState('');
+  const [order, setOrder] = useState('asc');
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [orderBy, setOrderBy] = useState('name');
+  const [selected, setSelected] = useState([]);
   const [page, setPage] = useState(0);
 
-  const [order, setOrder] = useState('asc');
-
-  const [selected, setSelected] = useState([]);
-
-  const [orderBy, setOrderBy] = useState('name');
-
-  const [filterName, setFilterName] = useState('');
-
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-
   useEffect(() => {
-    const getAllUserData = async () => {
-      try {
-        const dataUsers = await userService.GetAllUsers();
-
-        const dataRoles = await userService.GetAllRoles();
-
-        const map = {};
-        dataRoles.forEach((item) => {
-          map[item.id] = item.name;
-        });
-
-        const newUserDatas = dataUsers.map((user) => ({
-          ...user,
-          role_name: map[user.role_id] || 'Unknown Role',
-        }));
-        setUserData(newUserDatas);
-      } catch (error) {
-        console.log(error);
-      }
+    const GetAllProduct = async () => {
+      const data = await CategoryService.getAllProducts();
+      console.log(data);
+      setCategoriesData(data);
     };
 
-    getAllUserData();
+    GetAllProduct();
   }, []);
 
-  console.log(userData);
+  const handleFilterByName = (event) => {
+    setPage(0);
+    setFilterName(event.target.value);
+  };
 
   const handleSort = (event, id) => {
     const isAsc = orderBy === id && order === 'asc';
@@ -79,9 +58,18 @@ const UserPage = () => {
     }
   };
 
+  const handleChangeRowsPerPage = (event) => {
+    setPage(0);
+    setRowsPerPage(parseInt(event.target.value, 10));
+  };
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelecteds = userData.map((n) => n.id);
+      const newSelecteds = categoriesData.map((n) => n.id);
       setSelected(newSelecteds);
       return;
     }
@@ -106,32 +94,17 @@ const UserPage = () => {
     setSelected(newSelected);
   };
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setPage(0);
-    setRowsPerPage(parseInt(event.target.value, 10));
-  };
-
-  const handleFilterByName = (event) => {
-    setPage(0);
-    setFilterName(event.target.value);
-  };
-
   const dataFiltered = applyFilter({
-    inputData: userData,
+    inputData: categoriesData,
     comparator: getComparator(order, orderBy),
     filterName,
   });
-
   const notFound = !dataFiltered.length && !!filterName;
 
   return (
     <Container>
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
-        <Typography variant="h4">Users</Typography>
+        <Typography variant="h4">Categories</Typography>
 
         <Button
           component={RouterLink}
@@ -140,7 +113,7 @@ const UserPage = () => {
           color="inherit"
           startIcon={<Iconify icon="eva:plus-fill" />}
         >
-          New User
+          New Category
         </Button>
       </Stack>
 
@@ -149,7 +122,7 @@ const UserPage = () => {
           numSelected={selected.length}
           filterName={filterName}
           onFilterName={handleFilterByName}
-          placeHolder="Search user..."
+          placeHolder="Search category..."
         />
 
         <Scrollbar>
@@ -158,15 +131,14 @@ const UserPage = () => {
               <TableDataHead
                 order={order}
                 orderBy={orderBy}
-                rowCount={userData.length}
+                rowCount={categoriesData.length}
                 numSelected={selected.length}
                 onRequestSort={handleSort}
                 onSelectAllClick={handleSelectAllClick}
                 headLabel={[
                   { id: 'name', label: 'Name' },
-                  { id: 'phoneNumber', label: 'Phone number' },
-                  { id: 'email', label: 'Email' },
-                  { id: 'role', label: 'Role' },
+                  { id: 'description', label: 'Description' },
+                  { id: 'createdBy', label: 'Created by' },
                   { id: 'createdAt', label: 'Created at' },
                   { id: '' },
                 ]}
@@ -175,17 +147,11 @@ const UserPage = () => {
                 {dataFiltered
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((row, index) => (
-                    <UserTableRow
+                    <CategoriesTableRow
                       key={row.id}
-                      name={row.full_name}
-                      role={row.role_name}
-                      phoneNumber={row.phone_number}
-                      avatarUrl={
-                        row?.avatar
-                          ? `${import.meta.env.VITE_BACKEND_URL}images/avatars${row.avatar}`
-                          : `/assets/images/avatars/avatar_${index + 1}.jpg`
-                      }
-                      email={row.email}
+                      name={row.name}
+                      description={row.description}
+                      createdBy={row.created_by}
                       createdAt={fDateTime(row.created_at, null)}
                       selected={selected.indexOf(row.id) !== -1}
                       handleClick={(event) => handleClick(event, row.id)}
@@ -194,7 +160,7 @@ const UserPage = () => {
 
                 <TableEmptyRow
                   height={77}
-                  emptyRows={emptyRows(page, rowsPerPage, userData.length)}
+                  emptyRows={emptyRows(page, rowsPerPage, categoriesData.length)}
                 />
 
                 {notFound && <TableNoData query={filterName} />}
@@ -202,19 +168,16 @@ const UserPage = () => {
             </Table>
           </TableContainer>
         </Scrollbar>
-
-        <TablePagination
-          page={page}
-          component="div"
-          count={userData.length}
-          rowsPerPage={rowsPerPage}
-          onPageChange={handleChangePage}
-          rowsPerPageOptions={[5, 10, 25]}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
       </Card>
+      <TablePagination
+        page={page}
+        component="div"
+        count={categoriesData.length}
+        rowsPerPage={rowsPerPage}
+        onPageChange={handleChangePage}
+        rowsPerPageOptions={[5, 10, 25]}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
     </Container>
   );
-};
-
-export default memo(UserPage);
+}

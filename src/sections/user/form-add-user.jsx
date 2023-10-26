@@ -35,8 +35,8 @@ function FormInfoUser() {
 
   useEffect(() => {
     const getRoleData = async () => {
-      const resp = await userService.GetAllRoles();
-      SetRoles(resp.data);
+      const dataRoles = await userService.GetAllRoles();
+      SetRoles(dataRoles);
     };
     getRoleData();
   }, []);
@@ -67,8 +67,8 @@ function FormInfoUser() {
       formData.append('phone_number', values.phone_number);
       formData.append('password', values.password);
       formData.append('role_id', values.role_id);
-      const resp = await userService.CreateNewUser(formData);
-      console.log(resp);
+      const data = await userService.CreateNewUser(formData);
+      console.log(data);
     },
   });
 
