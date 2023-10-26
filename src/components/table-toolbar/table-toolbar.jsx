@@ -9,9 +9,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 
 import Iconify from 'src/components/iconify';
 
-// ----------------------------------------------------------------------
-
-export default function UserTableToolbar({ numSelected, filterName, onFilterName }) {
+export default function TableToolBar({ numSelected, filterName, onFilterName, placeHolder }) {
   return (
     <Toolbar
       sx={{
@@ -33,7 +31,7 @@ export default function UserTableToolbar({ numSelected, filterName, onFilterName
         <OutlinedInput
           value={filterName}
           onChange={onFilterName}
-          placeholder="Search user..."
+          placeholder={placeHolder}
           startAdornment={
             <InputAdornment position="start">
               <Iconify
@@ -62,8 +60,9 @@ export default function UserTableToolbar({ numSelected, filterName, onFilterName
   );
 }
 
-UserTableToolbar.propTypes = {
+TableToolBar.propTypes = {
   numSelected: PropTypes.number,
   filterName: PropTypes.string,
   onFilterName: PropTypes.func,
+  placeHolder: PropTypes.string,
 };

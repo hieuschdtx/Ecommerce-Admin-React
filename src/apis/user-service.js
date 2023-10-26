@@ -1,41 +1,27 @@
-import { axiosInstance, methods, publicApi } from 'src/utils/axios-instance';
+import { methods, callApi } from 'src/utils/api-config';
 
-const userService = {
+export const userService = {
   GetAllUsers: async () => {
-    // const resp = axiosInstance.get('v1/user/get-all');
-    // return resp;
-    const data = await publicApi('v1/user/get-all', methods.get, null);
-    console.log(data);
+    const headers = { 'Content-Type': 'application/json' };
+    const data = await callApi('v1/user/get-all', methods.get, headers, null);
     return data;
   },
 
-  CreateNewUser: async (data) => {
-    const resp = axiosInstance.post('v1/user/create', data, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        timeout: 1000,
-      },
-    });
-    return resp;
+  CreateNewUser: async (body) => {
+    const headers = { 'Content-Type': 'multipart/form-data' };
+    const data = callApi('v1/user/create', methods.post, headers, body);
+    return data;
   },
 
   GetAllRoles: async () => {
-    const data = await publicApi('v1/role/get-all', methods.get, null);
-    console.log(data);
+    const headers = { 'Content-Type': 'application/json' };
+    const data = await callApi('v1/role/get-all', methods.get, headers, null);
     return data;
   },
 
   LoginUser: async (body) => {
-    // const resp = axiosInstance.post('v1/user/login', body, {
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    // });
-    // const data = await resp.json();
-    // return data;
-    const data = await publicApi('v1/user/login', methods.post, body);
+    const headers = { 'Content-Type': 'application/json' };
+    const data = await callApi('v1/user/login', methods.post, headers, body);
     return data;
   },
 };
-
-export { userService };
