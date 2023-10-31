@@ -14,6 +14,7 @@ import { CategoryService } from 'src/apis/category-service';
 import Iconify from 'src/components/iconify';
 import ModalDelete from 'src/components/modal-delete/modal-delete';
 import { notify } from 'src/utils/untils';
+import CategoryEdit from './category-edit';
 
 export default function CategoriesTableRow({
   selected,
@@ -22,10 +23,11 @@ export default function CategoriesTableRow({
   createdBy,
   createdAt,
   handleClick,
-  handleDelete,
+  hanldeGetId,
 }) {
   const [open, setOpen] = useState(null);
-  const [openModal, setOpenModal] = useState(false);
+  const [openModalDelete, setOpenModalDelete] = useState(false);
+  const [openModalEdit, setOpenModalEdit] = useState(false);
   const [id, setId] = useState(null);
 
   const handleOpenMenu = (event) => {
@@ -36,10 +38,19 @@ export default function CategoriesTableRow({
     setOpen(null);
   };
 
-  const handleDeleteModal = async (event) => {
-    const categoryId = handleDelete(event);
+  const handleEditModal = (event) => {
+    const categoryId = hanldeGetId(event);
+
     setId(categoryId);
-    setOpenModal(true);
+    setOpenModalEdit(true);
+    setOpen(null);
+  };
+
+  const handleDeleteModal = async (event) => {
+    const categoryId = hanldeGetId(event);
+
+    setId(categoryId);
+    setOpenModalDelete(true);
     setOpen(null);
   };
 
@@ -56,10 +67,17 @@ export default function CategoriesTableRow({
   return (
     <>
       <ModalDelete
-        open={openModal}
-        handleClose={() => setOpenModal(false)}
+        open={openModalDelete}
+        handleClose={() => setOpenModalDelete(false)}
         handleAccept={handleDeleteCategory}
       />
+      {openModalEdit && (
+        <CategoryEdit
+          open={openModalEdit}
+          handleClose={() => setOpenModalEdit(false)}
+          categoryId={id}
+        />
+      )}
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
         <TableCell padding="checkbox">
           <Checkbox disableRipple checked={selected} onChange={handleClick} />
@@ -96,7 +114,7 @@ export default function CategoriesTableRow({
           sx: { width: 140 },
         }}
       >
-        <MenuItem onClick={handleCloseMenu}>
+        <MenuItem onClick={(event) => handleEditModal(event)}>
           <Iconify icon="eva:edit-fill" sx={{ mr: 2 }} />
           Edit
         </MenuItem>
@@ -121,5 +139,5 @@ CategoriesTableRow.propTypes = {
   description: PropTypes.any,
   selected: PropTypes.any,
   createdAt: PropTypes.string,
-  handleDelete: PropTypes.func,
+  hanldeGetId: PropTypes.func,
 };
