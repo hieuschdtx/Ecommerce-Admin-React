@@ -10,7 +10,7 @@ import { alpha } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import ListItemButton from '@mui/material/ListItemButton';
 
-import { usePathname } from 'src/routes/hooks';
+import { usePathname, useRouter } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
 import { useResponsive } from 'src/hooks/use-responsive';
@@ -19,6 +19,9 @@ import { account } from 'src/_mock/account';
 
 import Logo from 'src/components/logo';
 import Scrollbar from 'src/components/scrollbar';
+import { jwtConst } from 'src/resources/jwt-const';
+import { userService } from 'src/apis/user-service';
+import { storage } from 'src/utils/storage';
 
 import { NAV } from './config-layout';
 import navConfig from './config-navigation';
@@ -170,35 +173,82 @@ function NavItem({ item }) {
   const active = item.path === pathname;
 
   return (
-    <ListItemButton
-      component={RouterLink}
-      href={item.path}
-      sx={{
-        minHeight: 44,
-        borderRadius: 0.75,
-        typography: 'body2',
-        color: 'text.secondary',
-        textTransform: 'capitalize',
-        fontWeight: 'fontWeightMedium',
-        ...(active && {
-          color: 'primary.main',
-          fontWeight: 'fontWeightSemiBold',
-          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-          '&:hover': {
-            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.16),
-          },
-        }),
-      }}
-    >
-      <Box component="span" sx={{ width: 24, height: 24, mr: 2 }}>
-        {item.icon}
-      </Box>
-
-      <Box component="span">{item.title} </Box>
-    </ListItemButton>
+    <div>
+      {item.title === 'logout' ? (
+        <ListItemButtons
+          item={item}
+          sx={{
+            minHeight: 44,
+            borderRadius: 0.75,
+            typography: 'body2',
+            color: 'text.secondary',
+            textTransform: 'capitalize',
+            fontWeight: 'fontWeightMedium',
+            ...(active && {
+              color: 'primary.main',
+              fontWeight: 'fontWeightSemiBold',
+              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+              '&:hover': {
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.16),
+              },
+            }),
+          }}
+        />
+      ) : (
+        <ListItemButton
+          component={RouterLink}
+          href={item.path}
+          sx={{
+            minHeight: 44,
+            borderRadius: 0.75,
+            typography: 'body2',
+            color: 'text.secondary',
+            textTransform: 'capitalize',
+            fontWeight: 'fontWeightMedium',
+            ...(active && {
+              color: 'primary.main',
+              fontWeight: 'fontWeightSemiBold',
+              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+              '&:hover': {
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.16),
+              },
+            }),
+          }}
+        >
+          <Box component="span" sx={{ width: 24, height: 24, mr: 2 }}>
+            {item.icon}
+          </Box>
+          <Box component="span">{item.title}</Box>
+        </ListItemButton>
+      )}
+    </div>
   );
 }
 
 NavItem.propTypes = {
   item: PropTypes.object,
+};
+
+const ListItemButtons = ({ item, sx }) => {
+  const router = useRouter();
+  const handlerLogout = async () => {
+    await userService.LogoutUser();
+    storage.removeCache(jwtConst.user);
+    storage.removeCache(jwtConst.token);
+    router.push('/login');
+  };
+
+  return (
+    <ListItemButton sx={sx} onClick={handlerLogout}>
+      <Box component="span" sx={{ width: 24, height: 24, mr: 2 }}>
+        {item.icon}
+      </Box>
+      <Box component="span">{item.title}</Box>
+    </ListItemButton>
+  );
+};
+
+ListItemButtons.propTypes = {
+  item: PropTypes.object,
+  sx: PropTypes.shape({}),
 };

@@ -9,14 +9,21 @@ export const methods = {
 };
 
 export const callApi = async (path, method, headers, body) => {
-  console.log(headers);
   const url = `${BACKEND_URL}${path}`;
-  const resp = await axios(url, {
-    method,
-    headers,
-    data: body,
-    withCredentials: true,
-  });
-  const data = await resp.data;
-  return data;
+  try {
+    const resp = await axios(url, {
+      method,
+      headers,
+      data: body,
+      withCredentials: true,
+    });
+    const { data } = resp;
+    return data;
+  } catch (error) {
+    if (error.response) {
+      return error.response.data;
+    }
+
+    throw error.message;
+  }
 };

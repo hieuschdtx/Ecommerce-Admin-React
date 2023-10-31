@@ -1,3 +1,5 @@
+import { toast } from 'react-toastify';
+
 export const visuallyHidden = {
   border: 0,
   margin: -1,
@@ -8,6 +10,21 @@ export const visuallyHidden = {
   position: 'absolute',
   whiteSpace: 'nowrap',
   clip: 'rect(0 0 0 0)',
+};
+
+export const styleToast = {
+  position: 'top-right',
+  autoClose: 2000,
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: false,
+  draggable: true,
+  progress: undefined,
+};
+
+export const notify = (message, success) => {
+  if (success) toast.success(message, styleToast);
+  else toast.error(message, styleToast);
 };
 
 export function emptyRows(page, rowsPerPage, arrayLength) {
