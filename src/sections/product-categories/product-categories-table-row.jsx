@@ -11,11 +11,10 @@ import {
   Typography,
 } from '@mui/material';
 import { notify } from 'src/utils/untils';
-import { CategoryService } from 'src/apis/category-service';
 import ModalDelete from 'src/components/modal-delete/modal-delete';
 import Iconify from 'src/components/iconify';
-// import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
+import { productCategoriesService } from 'src/apis/product-categories-service';
 import ProductCategoriesEdit from './product-categories-edit';
 
 export default function ProductCategoriesTableRow({
@@ -32,7 +31,6 @@ export default function ProductCategoriesTableRow({
   const [openModalDelete, setOpenModalDelete] = useState(false);
   const [openModalEdit, setOpenModalEdit] = useState(false);
   const [id, setId] = useState(null);
-  // const { categories } = useSelector((state) => state.rootReducer.category);
 
   useEffect(() => {}, []);
 
@@ -62,7 +60,7 @@ export default function ProductCategoriesTableRow({
 
   const handleDeleteCategory = async () => {
     if (id) {
-      const data = await CategoryService.DeleteCategory(id);
+      const data = await productCategoriesService.deleteProductCategory(id);
       setId(null);
       const { message, success } = data;
       notify(message, success);
