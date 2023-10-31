@@ -4,7 +4,7 @@ import { categoryActionThunk } from '../actions/category-action';
 const { getCategories } = categoryActionThunk;
 
 const categorySilce = createSlice({
-  name: 'AUTHENTICATION',
+  name: 'CATEGORY',
   initialState: {
     categories: [],
     loading: false,
