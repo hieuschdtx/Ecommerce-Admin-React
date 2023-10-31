@@ -16,4 +16,9 @@ export const CategoryService = {
     const data = await callApi(`v1/category/delete?id=${id}`, methods.delete, headers, null);
     return data;
   },
+  UpdateCategory: async (id, body) => {
+    const headers = { 'Content-Type': 'application/json' };
+    const data = await callApi(`v1/category/update?id=${id}`, methods.put, headers, body);
+    return data;
+  },
 };

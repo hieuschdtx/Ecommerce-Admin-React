@@ -68,7 +68,7 @@ export default function CategoriesView() {
     setRowsPerPage(parseInt(event.target.value, 10));
   };
 
-  const handleDelete = (event, id) => {
+  const hanldeGetId = (event, id) => {
     event.preventDefault();
     return id;
   };
@@ -165,7 +165,7 @@ export default function CategoriesView() {
                         createdAt={fDateTime(row.created_at, null)}
                         selected={selected.indexOf(row.id) !== -1}
                         handleClick={(event) => handleClick(event, row.id)}
-                        handleDelete={(event) => handleDelete(event, row.id)}
+                        hanldeGetId={(event) => hanldeGetId(event, row.id)}
                       />
                     ))}
 
