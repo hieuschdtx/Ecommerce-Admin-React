@@ -10,7 +10,10 @@ import {
 } from '@mui/material';
 import PropTypes from 'prop-types';
 import { useState } from 'react';
+import { CategoryService } from 'src/apis/category-service';
 import Iconify from 'src/components/iconify';
+import ModalDelete from 'src/components/modal-delete/modal-delete';
+import { notify } from 'src/utils/untils';
 
 export default function CategoriesTableRow({
   selected,
@@ -19,18 +22,44 @@ export default function CategoriesTableRow({
   createdBy,
   createdAt,
   handleClick,
+  handleDelete,
 }) {
   const [open, setOpen] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
+  const [id, setId] = useState(null);
 
   const handleOpenMenu = (event) => {
     setOpen(event.currentTarget);
   };
 
-  const handleCloseMenu = () => {
+  const handleCloseMenu = (event) => {
     setOpen(null);
   };
+
+  const handleDeleteModal = async (event) => {
+    const categoryId = handleDelete(event);
+    setId(categoryId);
+    setOpenModal(true);
+    setOpen(null);
+  };
+
+  const handleDeleteCategory = async () => {
+    if (id) {
+      const data = await CategoryService.DeleteCategory(id);
+      setId(null);
+      const { message, success } = data;
+      notify(message, success);
+    }
+    setId(null);
+  };
+
   return (
     <>
+      <ModalDelete
+        open={openModal}
+        handleClose={() => setOpenModal(false)}
+        handleAccept={handleDeleteCategory}
+      />
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
         <TableCell padding="checkbox">
           <Checkbox disableRipple checked={selected} onChange={handleClick} />
@@ -72,7 +101,12 @@ export default function CategoriesTableRow({
           Edit
         </MenuItem>
 
-        <MenuItem onClick={handleCloseMenu} sx={{ color: 'error.main' }}>
+        <MenuItem
+          onClick={(event) => {
+            handleDeleteModal(event);
+          }}
+          sx={{ color: 'error.main' }}
+        >
           <Iconify icon="eva:trash-2-outline" sx={{ mr: 2 }} />
           Delete
         </MenuItem>
@@ -87,4 +121,5 @@ CategoriesTableRow.propTypes = {
   description: PropTypes.any,
   selected: PropTypes.any,
   createdAt: PropTypes.string,
+  handleDelete: PropTypes.func,
 };

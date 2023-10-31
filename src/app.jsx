@@ -1,19 +1,48 @@
-/* eslint-disable perfectionist/sort-imports */
+import { useEffect } from 'react';
 import 'src/global.css';
 
 import { useScrollToTop } from 'src/hooks/use-scroll-to-top';
 
-import Router from 'src/routes/sections';
 import ThemeProvider from 'src/theme';
+import { connection } from './utils/signalR';
+import 'react-toastify/dist/ReactToastify.css';
+import ToastMessage from './components/toast/toast';
+import Router from './routes/sections';
+import { useRouter } from './routes/hooks';
+import { auth } from './utils/auth';
 
 // ----------------------------------------------------------------------
 
-export default function App() {
+const App = () => {
+  const router = useRouter();
   useScrollToTop();
+  useEffect(() => {
+    connection.start().then(() => {
+      console.log('Connected to SignalR hub.');
+    });
+    return () => {
+      connection.stop().then(() => {
+        console.log('Disconnected from SignalR hub.');
+      });
+    };
+  }, []);
+
+  useEffect(() => {
+    const isAuthenticated = auth.CheckExprise();
+    const hasAccess = auth.GetAccess();
+
+    if (!(isAuthenticated && hasAccess)) {
+      console.log('Tài khoản không có quyền truy cập hoặc đã hết phiên làm việc');
+      router.push('/login');
+    }
+  }, [router]);
 
   return (
     <ThemeProvider>
       <Router />
+      <ToastMessage />
     </ThemeProvider>
   );
-}
+};
+
+export default App;

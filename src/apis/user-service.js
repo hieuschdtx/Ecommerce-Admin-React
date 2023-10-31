@@ -24,4 +24,9 @@ export const userService = {
     const data = await callApi('v1/user/login', methods.post, headers, body);
     return data;
   },
+  LogoutUser: async () => {
+    const headers = { 'Content-Type': 'application/json' };
+    const data = await callApi('v1/user/logout', methods.post, headers, null);
+    return data;
+  },
 };

@@ -20,12 +20,11 @@ import { bgGradient } from 'src/theme/css';
 import Logo from 'src/components/logo';
 import Iconify from 'src/components/iconify';
 import { userService } from 'src/apis/user-service';
-import { storage } from 'src/utils/storage';
 import { useRouter } from 'src/routes/hooks';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import ToastMessage from 'src/components/toast';
 import { jwtConst } from 'src/resources/jwt-const';
+import { storage } from 'src/utils/storage';
+import { auth } from 'src/utils/auth';
+import { notify } from 'src/utils/untils';
 
 // ----------------------------------------------------------------------
 
@@ -36,18 +35,6 @@ export default function LoginView() {
 
   const router = useRouter();
 
-  const notify = (message) => {
-    toast.success(message, {
-      position: 'top-right',
-      autoClose: 2000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: false,
-      draggable: true,
-      progress: undefined,
-    });
-  };
-
   const formik = useFormik({
     initialValues: {
       phone_number: '',
@@ -57,12 +44,13 @@ export default function LoginView() {
     onSubmit: async (values) => {
       console.log(values);
 
-      const data = await userService.LoginUser(values);
-      console.log(data);
+      const dataResp = await userService.LoginUser(values);
+      const { message, success, data } = dataResp;
+      notify(message, success);
 
-      if (data.success) {
-        storage.setCache(jwtConst.token, data.data);
-        notify(data.message);
+      if (success) {
+        storage.setCache(jwtConst.token, data);
+        auth.SetUserInfo(data);
         setTimeout(() => {
           router.push('/');
         }, 2500);
@@ -196,7 +184,6 @@ export default function LoginView() {
           {renderForm}
         </Card>
       </Stack>
-      <ToastMessage />
     </Box>
   );
 }
