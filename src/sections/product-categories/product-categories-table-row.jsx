@@ -79,7 +79,7 @@ export default function ProductCategoriesTableRow({
         <ProductCategoriesEdit
           open={openModalEdit}
           handleClose={() => setOpenModalEdit(false)}
-          categoryId={id}
+          proCategory={id}
         />
       )}
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>

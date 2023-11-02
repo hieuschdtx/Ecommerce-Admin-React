@@ -28,7 +28,7 @@ const style = {
   border: 'none',
   borderRadius: '16px',
   p: 3,
-  width: '70%',
+  width: '45%',
 };
 
 const CategoryEdit = ({ open, handleClose, categoryId }) => {
@@ -105,9 +105,7 @@ const CategoryEdit = ({ open, handleClose, categoryId }) => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.id && !!formik.errors.id}
                   helperText={formik.touched.id && formik.errors.id}
-                  InputProps={{
-                    readOnly: true,
-                  }}
+                  disabled
                   required
                 />
               </Grid>
@@ -148,9 +146,7 @@ const CategoryEdit = ({ open, handleClose, categoryId }) => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.created_by && !!formik.errors.created_by}
                   helperText={formik.touched.created_by && formik.errors.created_by}
-                  InputProps={{
-                    readOnly: true,
-                  }}
+                  disabled
                   required
                 />
               </Grid>
@@ -164,9 +160,7 @@ const CategoryEdit = ({ open, handleClose, categoryId }) => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.created_at && !!formik.errors.created_at}
                   helperText={formik.touched.created_at && formik.errors.created_at}
-                  InputProps={{
-                    readOnly: true,
-                  }}
+                  disabled
                   required
                 />
               </Grid>
@@ -180,9 +174,7 @@ const CategoryEdit = ({ open, handleClose, categoryId }) => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.modified_by && !!formik.errors.modified_by}
                   helperText={formik.touched.modified_by && formik.errors.modified_by}
-                  InputProps={{
-                    readOnly: true,
-                  }}
+                  disabled
                   required
                 />
               </Grid>
@@ -196,9 +188,7 @@ const CategoryEdit = ({ open, handleClose, categoryId }) => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.modified_at && !!formik.errors.modified_at}
                   helperText={formik.touched.modified_at && formik.errors.modified_at}
-                  InputProps={{
-                    readOnly: true,
-                  }}
+                  disabled
                   required
                 />
               </Grid>
