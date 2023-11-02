@@ -232,6 +232,11 @@
   "resolved" "https://registry.npmjs.org/@floating-ui/utils/-/utils-0.1.6.tgz"
   "version" "0.1.6"
 
+"@hookform/resolvers@^3.3.2":
+  "integrity" "sha512-Tw+GGPnBp+5DOsSg4ek3LCPgkBOuOgS5DsDV7qsWNH9LZc433kgsWICjlsh2J9p04H2K66hsXPPb9qn9ILdUtA=="
+  "resolved" "https://registry.npmjs.org/@hookform/resolvers/-/resolvers-3.3.2.tgz"
+  "version" "3.3.2"
+
 "@humanwhocodes/config-array@^0.11.11":
   "integrity" "sha512-N2brEuAadi0CcdeMXUkhbZB84eskAc8MEX1By6qEchoVywSgXPIjou4rYsl0V3Hj0ZnuGycGCjdNgockbzeWNA=="
   "resolved" "https://registry.npmjs.org/@humanwhocodes/config-array/-/config-array-0.11.11.tgz"
@@ -2871,7 +2876,7 @@
     "react-fast-compare" "^3.2.0"
     "shallowequal" "^1.1.0"
 
-"react-hook-form@^7.47.0":
+"react-hook-form@^7.0.0", "react-hook-form@^7.47.0":
   "integrity" "sha512-F/TroLjTICipmHeFlMrLtNLceO2xr1jU3CyiNla5zdwsGUGu2UOxxR4UyJgLlhMwLW/Wzp4cpJ7CPfgJIeKdSg=="
   "resolved" "https://registry.npmjs.org/react-hook-form/-/react-hook-form-7.47.0.tgz"
   "version" "7.47.0"

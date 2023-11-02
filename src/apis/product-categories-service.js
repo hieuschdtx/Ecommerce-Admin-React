@@ -16,4 +16,9 @@ export const productCategoriesService = {
     const data = await callApi(`v1/product-category?id=${id}`, methods.delete, headers, null);
     return data;
   },
+  updateProductCategory: async (id, body) => {
+    const headers = { 'Content-Type': 'application/json' };
+    const data = await callApi(`v1/product-category/update?id=${id}`, methods.put, headers, body);
+    return data;
+  },
 };

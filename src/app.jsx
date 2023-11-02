@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'src/global.css';
 
 import { useScrollToTop } from 'src/hooks/use-scroll-to-top';
@@ -16,16 +16,26 @@ import { auth } from './utils/auth';
 const App = () => {
   const router = useRouter();
   useScrollToTop();
+
+  const [connections, setConnections] = useState(null);
+
   useEffect(() => {
-    connection.start().then(() => {
-      console.log('Connected to SignalR hub.');
-    });
-    return () => {
-      connection.stop().then(() => {
-        console.log('Disconnected from SignalR hub.');
-      });
-    };
+    setConnections(connection);
   }, []);
+
+  // eslint-disable-next-line consistent-return
+  useEffect(() => {
+    if (connections) {
+      connections.start().then(() => {
+        console.log('Connected to SignalR hub.');
+      });
+
+      return () => {
+        connections.stop();
+        console.log('Disconnected from SignalR hub');
+      };
+    }
+  }, [connections]);
 
   useEffect(() => {
     const isAuthenticated = auth.CheckExprise();

@@ -11,7 +11,7 @@ const style = {
   border: 'none',
   borderRadius: '16px',
   p: 3,
-  width: '40%',
+  width: '25%',
 };
 
 export default function ModalDelete({ open, handleClose, handleAccept }) {

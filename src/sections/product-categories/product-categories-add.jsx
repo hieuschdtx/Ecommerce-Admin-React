@@ -106,6 +106,7 @@ export default function ProductCategoriesAdd({ open, handleClose }) {
                   name="description"
                   fullWidth
                   multiline
+                  row={8}
                   value={formik.values.description}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
@@ -152,7 +153,7 @@ export default function ProductCategoriesAdd({ open, handleClose }) {
                       onChange={formik.handleChange}
                       error={formik.touched.promotion_id && !!formik.errors.promotion_id}
                     >
-                      {promotion.map((item, index) => (
+                      {promotion?.map((item, index) => (
                         <MenuItem key={`${item}-${index}`} value={item.id}>
                           {item.discount}
                         </MenuItem>
