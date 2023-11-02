@@ -4,6 +4,7 @@ import { forwardRef } from 'react';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 
+import { secondary } from 'src/theme/palette';
 import { StyledLabel } from './styles';
 
 // ----------------------------------------------------------------------
@@ -55,6 +56,10 @@ Label.propTypes = {
     'success',
     'warning',
     'error',
+    '#b71d18', // error
+    '#118d57', // success
+    '#b76e00', // progress
+    secondary.contrastText, // sale,
   ]),
 };
 

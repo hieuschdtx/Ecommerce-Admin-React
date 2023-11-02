@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
   Checkbox,
-  Chip,
   IconButton,
   MenuItem,
   Popover,
@@ -15,6 +14,8 @@ import ModalDelete from 'src/components/modal-delete/modal-delete';
 import Iconify from 'src/components/iconify';
 import PropTypes from 'prop-types';
 import { productCategoriesService } from 'src/apis/product-categories-service';
+import Label from 'src/components/label';
+import { secondary } from 'src/theme/palette';
 import ProductCategoriesEdit from './product-categories-edit';
 
 export default function ProductCategoriesTableRow({
@@ -68,6 +69,20 @@ export default function ProductCategoriesTableRow({
     setId(null);
   };
 
+  const renderDiscount = (
+    <Label
+      variant="filled"
+      color={secondary.dark}
+      sx={{
+        fontSize: '12px',
+        pl: 1.5,
+        pr: 1.5,
+      }}
+    >
+      {`${discount}%`}
+    </Label>
+  );
+
   return (
     <>
       <ModalDelete
@@ -99,9 +114,7 @@ export default function ProductCategoriesTableRow({
 
         <TableCell component="th" scope="row" padding="none">
           <Stack direction="row" alignItems="center" justifyContent="center" spacing={2}>
-            <Typography variant="subtitle2" noWrap textAlign="center">
-              <Chip color="secondary" label={`${discount}%`} />
-            </Typography>
+            {renderDiscount}
           </Stack>
         </TableCell>
 
