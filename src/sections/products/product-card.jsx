@@ -17,13 +17,12 @@ export default function ShopProductCard({ product }) {
   const renderStatus = (
     <Label
       variant="filled"
-      color={(product.status === 'sale' && 'error') || 'info'}
+      color={(product.status === 'Sale' && '#118d57') || '#b76e00'}
       sx={{
         zIndex: 9,
         top: 16,
         right: 16,
         position: 'absolute',
-        textTransform: 'uppercase',
       }}
     >
       {product.status}
