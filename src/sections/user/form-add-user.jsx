@@ -27,6 +27,7 @@ import {
 
 import { userService } from 'src/apis/user-service';
 import Iconify from 'src/components/iconify';
+import { notify } from 'src/utils/untils';
 
 function FormInfoUser() {
   const [showPassword, setShowPassword] = useState(false);
@@ -35,8 +36,8 @@ function FormInfoUser() {
 
   useEffect(() => {
     const getRoleData = async () => {
-      const dataRoles = await userService.GetAllRoles();
-      SetRoles(dataRoles);
+      const { data } = await userService.GetAllRoles();
+      SetRoles(data);
     };
     getRoleData();
   }, []);
@@ -67,8 +68,9 @@ function FormInfoUser() {
       formData.append('phone_number', values.phone_number);
       formData.append('password', values.password);
       formData.append('role_id', values.role_id);
-      const data = await userService.CreateNewUser(formData);
-      console.log(data);
+      const { data, status } = await userService.CreateNewUser(formData);
+      const { message } = data;
+      notify(message, status);
     },
   });
 

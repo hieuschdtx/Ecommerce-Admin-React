@@ -59,9 +59,9 @@ const CategoryEdit = ({ open, handleClose, categoryId }) => {
         modified_by: fullName,
       };
 
-      const data = await CategoryService.UpdateCategory(values.id, body);
-      const { message, success } = data;
-      notify(message, success);
+      const { data, status } = await CategoryService.UpdateCategory(values.id, body);
+      const { message } = data;
+      notify(message, status);
       handleClose();
       resetForm();
     },

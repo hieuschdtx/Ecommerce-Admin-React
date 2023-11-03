@@ -44,13 +44,13 @@ export default function LoginView() {
     onSubmit: async (values) => {
       console.log(values);
 
-      const dataResp = await userService.LoginUser(values);
-      const { message, success, data } = dataResp;
-      notify(message, success);
+      const { data, status } = await userService.LoginUser(values);
+      console.log(data, status);
+      notify(data.message, status);
 
-      if (success) {
-        storage.setCache(jwtConst.token, data);
-        auth.SetUserInfo(data);
+      if (data.success) {
+        storage.setCache(jwtConst.token, data.data);
+        auth.SetUserInfo(data.data);
         setTimeout(() => {
           router.push('/');
         }, 2500);

@@ -56,10 +56,10 @@ export default function CategoriesTableRow({
 
   const handleDeleteCategory = async () => {
     if (id) {
-      const data = await CategoryService.DeleteCategory(id);
+      const { data, status } = await CategoryService.DeleteCategory(id);
       setId(null);
-      const { message, success } = data;
-      notify(message, success);
+      const { message } = data;
+      notify(message, status);
     }
     setId(null);
   };

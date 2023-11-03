@@ -53,16 +53,12 @@ export default function ProductCategoriesAdd({ open, handleClose }) {
       console.log(values);
       handleClose();
       values.created_by = fullName;
-      const { message, success } = await onSubmitForm(values);
-      notify(message, success);
+      const { data, status } = await productCategoriesService.createProductCategory(values);
+      const { message } = data;
+      notify(message, status);
       resetForm();
     },
   });
-
-  const onSubmitForm = async (body) => {
-    const data = await productCategoriesService.createProductCategory(body);
-    return data;
-  };
 
   useEffect(() => {
     const userData = auth.GetUserInfo();

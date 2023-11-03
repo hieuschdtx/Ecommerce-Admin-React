@@ -17,13 +17,13 @@ export const styleToast = {
   autoClose: 2000,
   hideProgressBar: false,
   closeOnClick: true,
-  pauseOnHover: false,
+  pauseOnHover: true,
   draggable: true,
   progress: undefined,
 };
 
-export const notify = (message, success) => {
-  if (success) toast.success(message, styleToast);
+export const notify = (message, status) => {
+  if (status < 400) toast.success(message, styleToast);
   else toast.error(message, styleToast);
 };
 
