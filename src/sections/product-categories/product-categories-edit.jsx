@@ -82,10 +82,29 @@ export default function ProductCategoriesEdit({ open, handleClose, proCategory }
   const { categories } = useSelector((state) => state.rootReducer.category);
   const { productCategories } = useSelector((state) => state.rootReducer.productCategories);
 
-  const { values, setValues, resetForm, handleChange, handleBlur, errors, touched } = useFormik({
-    initialValues: defaultValues,
-    validationSchema: validationForm,
-  });
+  const { values, setValues, resetForm, handleChange, handleBlur, errors, touched, handleSubmit } =
+    useFormik({
+      initialValues: defaultValues,
+      validationSchema: validationForm,
+      onSubmit: async (value) => {
+        console.log(value);
+        const body = {
+          name: value.name,
+          description: value.description,
+          modified_by: fullName,
+          promotion_id: value.promotion_id,
+          category_id: value.category_id,
+        };
+        const { data, status } = await productCategoriesService.updateProductCategory(
+          value.id,
+          body
+        );
+        const { message } = data;
+        notify(message, status);
+        resetForm();
+        handleClose();
+      },
+    });
 
   const filterProductCategory = useMemo(
     () => productCategories?.find((item) => item.id === proCategory),
@@ -123,21 +142,6 @@ export default function ProductCategoriesEdit({ open, handleClose, proCategory }
     filterProductCategory.category_id,
   ]);
 
-  const handleSubmitFormEdit = async (value) => {
-    handleClose();
-    const body = {
-      name: value.name,
-      description: value.description,
-      modified_by: fullName,
-      promotion_id: value.promotion_id,
-      category_id: value.category_id,
-    };
-    const data = await productCategoriesService.updateProductCategory(value.id, body);
-    const { message, success } = data;
-    notify(message, success);
-    resetForm();
-  };
-
   return (
     <Modal
       open={open}
@@ -155,7 +159,7 @@ export default function ProductCategoriesEdit({ open, handleClose, proCategory }
             Edit Product category
           </Typography>
           <Box>
-            <form>
+            <form onSubmit={handleSubmit}>
               <Grid direction="row" container spacing={2}>
                 <Grid item xs={12} sm={7}>
                   <TextField
@@ -306,13 +310,7 @@ export default function ProductCategoriesEdit({ open, handleClose, proCategory }
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} textAlign="start">
-                  <Button
-                    variant="contained"
-                    color="error"
-                    type="button"
-                    disabled={isDisabled}
-                    onClick={() => handleSubmitFormEdit(values)}
-                  >
+                  <Button variant="contained" color="error" type="submit" disabled={isDisabled}>
                     Update
                   </Button>
                 </Grid>

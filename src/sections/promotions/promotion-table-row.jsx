@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   Checkbox,
   IconButton,
@@ -9,28 +8,28 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { notify } from 'src/utils/untils';
+import { useState } from 'react';
+import { promotionService } from 'src/apis/promotion-service';
 import ModalDelete from 'src/components/modal-delete/modal-delete';
-import Iconify from 'src/components/iconify';
+import { notify } from 'src/utils/untils';
 import PropTypes from 'prop-types';
-import { productCategoriesService } from 'src/apis/product-categories-service';
+import { error, secondary, success } from 'src/theme/palette';
 import Label from 'src/components/label';
-import { secondary } from 'src/theme/palette';
-import ProductCategoriesEdit from './product-categories-edit';
+import Iconify from 'src/components/iconify';
 
-export default function ProductCategoriesTableRow({
-  selected,
+export default function PromotionTableRow({
   name,
-  category,
   discount,
-  createdBy,
-  createdAt,
+  from_day,
+  to_day,
+  status,
+  expiry,
+  selected,
   handleClick,
   hanldeGetId,
 }) {
   const [open, setOpen] = useState(null);
   const [openModalDelete, setOpenModalDelete] = useState(false);
-  const [openModalEdit, setOpenModalEdit] = useState(false);
   const [id, setId] = useState(null);
 
   const handleOpenMenu = (event) => {
@@ -38,14 +37,6 @@ export default function ProductCategoriesTableRow({
   };
 
   const handleCloseMenu = (event) => {
-    setOpen(null);
-  };
-
-  const handleEditModal = (event) => {
-    const categoryId = hanldeGetId(event);
-
-    setId(categoryId);
-    setOpenModalEdit(true);
     setOpen(null);
   };
 
@@ -57,12 +48,10 @@ export default function ProductCategoriesTableRow({
     setOpen(null);
   };
 
-  const handleDeleteCategory = async () => {
+  const handleDeletePromotion = async () => {
     if (id) {
-      const { data, status } = await productCategoriesService.deleteProductCategory(id);
-      setId(null);
-      const { message } = data;
-      notify(message, status);
+      const dataPromtion = await promotionService.deleteProductCategory(id);
+      notify(dataPromtion.data.message, dataPromtion.status);
     }
     setId(null);
   };
@@ -81,34 +70,53 @@ export default function ProductCategoriesTableRow({
     </Label>
   );
 
+  const renderExpiry = (
+    <Label
+      variant="filled"
+      color={expiry ? success.special : error.special}
+      sx={{
+        fontSize: '12px',
+        pl: 1.5,
+        pr: 1.5,
+      }}
+    >
+      {`${expiry ? 'Còn hạn' : 'Đã hết hạn'}`}
+    </Label>
+  );
+
+  const renderStatus = (
+    <Label
+      variant="filled"
+      color={status ? success.special : error.special}
+      sx={{
+        fontSize: '12px',
+        pl: 1.5,
+        pr: 1.5,
+      }}
+    >
+      {`${status ? 'Đang sử dụng' : 'Đã khóa'}`}
+    </Label>
+  );
+
   return (
     <>
       <ModalDelete
         open={openModalDelete}
         handleClose={() => setOpenModalDelete(false)}
-        handleAccept={handleDeleteCategory}
+        handleAccept={handleDeletePromotion}
       />
-      {openModalEdit && (
-        <ProductCategoriesEdit
-          open={openModalEdit}
-          handleClose={() => setOpenModalEdit(false)}
-          proCategory={id}
-        />
-      )}
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
         <TableCell padding="checkbox">
           <Checkbox disableRipple checked={selected} onChange={handleClick} />
         </TableCell>
 
         <TableCell component="th" scope="row" padding="none">
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="subtitle2" noWrap>
+          <Stack direction="row" alignItems="center" spacing={2} width="150px">
+            <Typography variant="subtitle2" noWrap overflow="hidden" textOverflow="ellipsis">
               {name}
             </Typography>
           </Stack>
         </TableCell>
-
-        <TableCell>{category}</TableCell>
 
         <TableCell component="th" scope="row" padding="none">
           <Stack direction="row" alignItems="center" justifyContent="center" spacing={2}>
@@ -116,9 +124,21 @@ export default function ProductCategoriesTableRow({
           </Stack>
         </TableCell>
 
-        <TableCell>{createdBy}</TableCell>
+        <TableCell>{from_day}</TableCell>
 
-        <TableCell>{createdAt}</TableCell>
+        <TableCell>{to_day}</TableCell>
+
+        <TableCell component="th" scope="row" padding="none">
+          <Stack direction="row" alignItems="center" justifyContent="center" spacing={2}>
+            {renderStatus}
+          </Stack>
+        </TableCell>
+
+        <TableCell component="th" scope="row" padding="none">
+          <Stack direction="row" alignItems="center" justifyContent="center" spacing={2}>
+            {renderExpiry}
+          </Stack>
+        </TableCell>
 
         <TableCell align="right">
           <IconButton onClick={handleOpenMenu}>
@@ -137,16 +157,16 @@ export default function ProductCategoriesTableRow({
           sx: { width: 140 },
         }}
       >
-        <MenuItem onClick={(event) => handleEditModal(event)}>
+        <MenuItem>
           <Iconify icon="eva:edit-fill" sx={{ mr: 2 }} />
           Edit
         </MenuItem>
 
         <MenuItem
+          sx={{ color: 'error.main' }}
           onClick={(event) => {
             handleDeleteModal(event);
           }}
-          sx={{ color: 'error.main' }}
         >
           <Iconify icon="eva:trash-2-outline" sx={{ mr: 2 }} />
           Delete
@@ -155,13 +175,17 @@ export default function ProductCategoriesTableRow({
     </>
   );
 }
-ProductCategoriesTableRow.propTypes = {
-  handleClick: PropTypes.func,
-  createdBy: PropTypes.any,
-  name: PropTypes.any,
-  discount: PropTypes.any,
-  category: PropTypes.any,
+
+PromotionTableRow.propTypes = {
+  name: PropTypes.string,
+  discount: PropTypes.number,
+  from_day: PropTypes.any,
+  to_day: PropTypes.any,
+  status: PropTypes.bool,
+  expiry: PropTypes.bool,
   selected: PropTypes.any,
-  createdAt: PropTypes.string,
+  handleClick: PropTypes.func,
   hanldeGetId: PropTypes.func,
 };
+
+// onClick={(event) => handleEditModal(event)} onClick={(event) => {handleDeleteModal(event)}}

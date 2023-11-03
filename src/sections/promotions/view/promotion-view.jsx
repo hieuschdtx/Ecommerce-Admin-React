@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 import {
   Button,
   Card,
@@ -9,85 +11,74 @@ import {
   TablePagination,
   Typography,
 } from '@mui/material';
-import { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import Iconify from 'src/components/iconify';
-import Scrollbar from 'src/components/scrollbar';
-import TableDataHead from 'src/components/table-head/table-head';
-import { TableToolBar } from 'src/components/table-toolbar';
-import { fDateTime } from 'src/utils/format-time';
-import { TableEmptyRow } from 'src/components/table-empty-row';
-import { connection } from 'src/utils/signalR';
-import { productCategoriesActionThunk } from 'src/redux/actions/product-categories-action';
 import { emptyRows, getComparator } from 'src/utils/untils';
-import TableNoData from 'src/components/table-no-data/table-no-data';
-import { categoryActionThunk } from 'src/redux/actions/category-action';
+import { useDispatch, useSelector } from 'react-redux';
+import { connection } from 'src/utils/signalR';
+import Scrollbar from 'src/components/scrollbar';
+import { TableToolBar } from 'src/components/table-toolbar';
+import TableDataHead from 'src/components/table-head/table-head';
+import { fCompareTime, fDateTime } from 'src/utils/format-time';
 import { promotionActionThunk } from 'src/redux/actions/promotion-action';
-import ProductCategoriesTableRow from '../product-categories-table-row';
-import { applyFilter } from '../filter-product-categories';
-import ProductCategoriesAdd from '../product-categories-add';
+import { TableEmptyRow } from 'src/components/table-empty-row';
+import TableNoData from 'src/components/table-no-data/table-no-data';
+import PromotionAdd from '../promotion-add';
+import { applyFilter } from '../filter-promotion';
+import PromotionTableRow from '../promotion-table-row';
 
-export default function ProductCategoriesView() {
-  const [filterName, setFilterName] = useState('');
-  const [order, setOrder] = useState('asc');
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [orderBy, setOrderBy] = useState('name');
-  const [selected, setSelected] = useState([]);
-  const [page, setPage] = useState(0);
+// const statusMessage = [
+//   { value: 0, message: 'Đã đóng' },
+//   { value: 1, message: 'Đã mở' },
+// ];
+
+// const expiryMessage = [
+//   { value: 0, message: 'Hết hạn' },
+//   { value: 1, message: 'Chưa hết hạn' },
+// ];
+
+export default function PromotionView() {
   const [open, setOpen] = useState(false);
-  const [proCategories, setProCategories] = useState([]);
+  const [filterName, setFilterName] = useState('');
+  const [selected, setSelected] = useState([]);
+  const [order, setOrder] = useState('asc');
+  const [orderBy, setOrderBy] = useState('name');
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [page, setPage] = useState(0);
   const dispatch = useDispatch();
-
-  const { productCategories } = useSelector((state) => state.rootReducer.productCategories);
-  const { categories } = useSelector((state) => state.rootReducer.category);
   const { promotion } = useSelector((state) => state.rootReducer.promotions);
 
   useEffect(() => {
-    if (productCategories.length === 0) {
-      dispatch(productCategoriesActionThunk.getproductCategories());
-    }
-    if (categories.length === 0) {
-      dispatch(categoryActionThunk.getCategories());
-    }
     if (promotion.length === 0) {
       dispatch(promotionActionThunk.getPromotions());
     }
-  }, [dispatch, productCategories, categories, promotion]);
+  }, [dispatch, promotion]);
 
   useEffect(() => {
     connection.on('RELOAD_DATA_CHANGE', () => {
-      dispatch(productCategoriesActionThunk.getproductCategories());
+      dispatch(promotionActionThunk.getPromotions());
     });
   }, [dispatch]);
-
-  useEffect(() => {
-    try {
-      const mapCategory = {};
-      const mapPromotion = {};
-
-      categories.forEach((item) => {
-        mapCategory[item.id] = item.name;
-      });
-      promotion.forEach((item) => {
-        mapPromotion[item.id] = item.discount;
-      });
-
-      const newproductCategories = productCategories.map((item) => ({
-        ...item,
-        category_name: mapCategory[item.category_id],
-        promotion_discount: mapPromotion[item.promotion_id],
-      }));
-
-      setProCategories(newproductCategories);
-    } catch (error) {
-      console.log(error);
-    }
-  }, [categories, productCategories, promotion]);
 
   const handleFilterByName = (event) => {
     setPage(0);
     setFilterName(event.target.value);
   };
+
+  const handleSelectAllClick = (event) => {
+    if (event.target.checked) {
+      const newSelecteds = promotion.map((n) => n.id);
+      setSelected(newSelecteds);
+      return;
+    }
+    setSelected([]);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setPage(0);
+    setRowsPerPage(parseInt(event.target.value, 10));
+  };
+
+  const expiryPromotion = (toDay) => fCompareTime(toDay);
 
   const handleSort = (event, id) => {
     const isAsc = orderBy === id && order === 'asc';
@@ -97,11 +88,6 @@ export default function ProductCategoriesView() {
     }
   };
 
-  const handleChangeRowsPerPage = (event) => {
-    setPage(0);
-    setRowsPerPage(parseInt(event.target.value, 10));
-  };
-
   const hanldeGetId = (event, id) => {
     event.preventDefault();
     return id;
@@ -109,15 +95,6 @@ export default function ProductCategoriesView() {
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
-  };
-
-  const handleSelectAllClick = (event) => {
-    if (event.target.checked) {
-      const newSelecteds = proCategories.map((n) => n.id);
-      setSelected(newSelecteds);
-      return;
-    }
-    setSelected([]);
   };
 
   const handleClick = (event, name) => {
@@ -139,16 +116,17 @@ export default function ProductCategoriesView() {
   };
 
   const dataFiltered = applyFilter({
-    inputData: proCategories,
+    inputData: promotion,
     comparator: getComparator(order, orderBy),
     filterName,
   });
   const notFound = !dataFiltered.length && !!filterName;
+
   return (
     <>
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
-          <Typography variant="h4">Product categories</Typography>
+          <Typography variant="h4">Promotion</Typography>
 
           <Button
             variant="contained"
@@ -156,39 +134,33 @@ export default function ProductCategoriesView() {
             startIcon={<Iconify icon="eva:plus-fill" />}
             onClick={() => setOpen(true)}
           >
-            New Product category
+            New Promotion
           </Button>
         </Stack>
-
         <Card>
           <TableToolBar
             numSelected={selected.length}
             filterName={filterName}
             onFilterName={handleFilterByName}
-            placeHolder="Search product category..."
+            placeHolder="Search promotion..."
           />
-
           <Scrollbar>
             <TableContainer sx={{ overflow: 'unset' }}>
               <Table sx={{ minWidth: 800 }}>
                 <TableDataHead
                   order={order}
                   orderBy={orderBy}
-                  rowCount={proCategories.length}
+                  rowCount={promotion.length}
                   numSelected={selected.length}
                   onRequestSort={handleSort}
                   onSelectAllClick={handleSelectAllClick}
                   headLabel={[
-                    { id: 'name', label: 'Tên', tooltip: '' },
-                    { id: 'category', label: 'Category', tooltip: 'Danh mục hiển thị' },
-                    {
-                      id: 'discount',
-                      label: 'Discount',
-                      align: 'center',
-                      tooltip: 'Giảm giá danh mục',
-                    },
-                    { id: 'createdBy', label: 'Created by' },
-                    { id: 'createdAt', label: 'Created at' },
+                    { id: 'name', label: 'Tên' },
+                    { id: 'discount', label: 'Phần trăm giảm', align: 'center' },
+                    { id: 'from_day', label: 'Từ ngày' },
+                    { id: 'to_day', label: 'Đến ngày' },
+                    { id: 'status', label: 'Trạng thái', align: 'center' },
+                    { id: 'expiry', label: 'Thời hạn', align: 'center' },
                     { id: '' },
                   ]}
                 />
@@ -196,13 +168,14 @@ export default function ProductCategoriesView() {
                   {dataFiltered
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row, index) => (
-                      <ProductCategoriesTableRow
+                      <PromotionTableRow
                         key={row.id}
                         name={row.name}
-                        category={row.category_name}
-                        discount={row.promotion_discount}
-                        createdBy={row.created_by}
-                        createdAt={fDateTime(row.created_at, null)}
+                        discount={row.discount}
+                        from_day={fDateTime(row.from_day)}
+                        to_day={fDateTime(row.to_day)}
+                        status={row.status}
+                        expiry={expiryPromotion(row.to_day)}
                         selected={selected.indexOf(row.id) !== -1}
                         handleClick={(event) => handleClick(event, row.id)}
                         hanldeGetId={(event) => hanldeGetId(event, row.id)}
@@ -211,9 +184,8 @@ export default function ProductCategoriesView() {
 
                   <TableEmptyRow
                     height={77}
-                    emptyRows={emptyRows(page, rowsPerPage, proCategories.length)}
+                    emptyRows={emptyRows(page, rowsPerPage, promotion.length)}
                   />
-
                   {notFound && <TableNoData query={filterName} />}
                 </TableBody>
               </Table>
@@ -223,14 +195,14 @@ export default function ProductCategoriesView() {
         <TablePagination
           page={page}
           component="div"
-          count={proCategories.length}
+          count={promotion.length}
           rowsPerPage={rowsPerPage}
           onPageChange={handleChangePage}
           rowsPerPageOptions={[5, 10, 25]}
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Container>
-      <ProductCategoriesAdd open={open} handleClose={() => setOpen(false)} />
+      <PromotionAdd open={open} handleClose={() => setOpen(false)} />
     </>
   );
 }

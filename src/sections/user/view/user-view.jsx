@@ -52,11 +52,11 @@ const UserPage = () => {
         const dataRoles = await userService.GetAllRoles();
 
         const map = {};
-        dataRoles.forEach((item) => {
+        dataRoles.data.forEach((item) => {
           map[item.id] = item.name;
         });
 
-        const newUserDatas = dataUsers.map((user) => ({
+        const newUserDatas = dataUsers.data.map((user) => ({
           ...user,
           role_name: map[user.role_id] || 'Unknown Role',
         }));

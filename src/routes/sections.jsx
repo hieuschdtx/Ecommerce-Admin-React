@@ -14,6 +14,7 @@ export const CategoryPage = lazy(() => import('src/pages/categories/categories')
 export const ProductCategoryPage = lazy(() =>
   import('src/pages/product-categories/product-categories')
 );
+export const PromotionPage = lazy(() => import('src/pages/promotions/promotions'));
 
 // ----------------------------------------------------------------------
 
@@ -35,6 +36,7 @@ export default function Router() {
         { path: 'user/new', element: <AddInfoUserPage /> },
         { path: 'category', element: <CategoryPage /> },
         { path: 'product-category', element: <ProductCategoryPage /> },
+        { path: 'promotion', element: <PromotionPage /> },
       ],
     },
     {

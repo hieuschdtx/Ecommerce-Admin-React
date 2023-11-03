@@ -42,9 +42,9 @@ export default function CategoryModal({ open, handleClose }) {
     onSubmit: async (values, { resetForm }) => {
       handleClose();
       values.created_by = fullName;
-      const data = await CategoryService.CreateCategory(values);
-      const { message, success } = data;
-      notify(message, success);
+      const { data, status } = await CategoryService.CreateCategory(values);
+      const { message } = data;
+      notify(message, status);
       resetForm();
     },
   });
