@@ -16,6 +16,7 @@ import PropTypes from 'prop-types';
 import { error, secondary, success } from 'src/theme/palette';
 import Label from 'src/components/label';
 import Iconify from 'src/components/iconify';
+import PromotionAdd from './promotion-add';
 
 export default function PromotionTableRow({
   name,
@@ -31,12 +32,19 @@ export default function PromotionTableRow({
   const [open, setOpen] = useState(null);
   const [openModalDelete, setOpenModalDelete] = useState(false);
   const [id, setId] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
 
   const handleOpenMenu = (event) => {
     setOpen(event.currentTarget);
   };
 
   const handleCloseMenu = (event) => {
+    setOpen(null);
+  };
+  const handleEditPromotion = (event) => {
+    const categoryId = hanldeGetId(event);
+    setId(categoryId);
+    setOpenModal(true);
     setOpen(null);
   };
 
@@ -105,6 +113,9 @@ export default function PromotionTableRow({
         handleClose={() => setOpenModalDelete(false)}
         handleAccept={handleDeletePromotion}
       />
+      {openModal && (
+        <PromotionAdd open={openModal} isEdit id={id} setOpen={() => setOpenModal(false)} />
+      )}
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
         <TableCell padding="checkbox">
           <Checkbox disableRipple checked={selected} onChange={handleClick} />
@@ -157,7 +168,7 @@ export default function PromotionTableRow({
           sx: { width: 140 },
         }}
       >
-        <MenuItem>
+        <MenuItem onClick={(event) => handleEditPromotion(event)}>
           <Iconify icon="eva:edit-fill" sx={{ mr: 2 }} />
           Edit
         </MenuItem>

@@ -26,16 +26,6 @@ import PromotionAdd from '../promotion-add';
 import { applyFilter } from '../filter-promotion';
 import PromotionTableRow from '../promotion-table-row';
 
-// const statusMessage = [
-//   { value: 0, message: 'Đã đóng' },
-//   { value: 1, message: 'Đã mở' },
-// ];
-
-// const expiryMessage = [
-//   { value: 0, message: 'Hết hạn' },
-//   { value: 1, message: 'Chưa hết hạn' },
-// ];
-
 export default function PromotionView() {
   const [open, setOpen] = useState(false);
   const [filterName, setFilterName] = useState('');
@@ -202,7 +192,7 @@ export default function PromotionView() {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Container>
-      <PromotionAdd open={open} handleClose={() => setOpen(false)} />
+      {open && <PromotionAdd isEdit={false} open={open} setOpen={() => setOpen(false)} />}
     </>
   );
 }
