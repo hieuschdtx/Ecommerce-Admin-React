@@ -1,5 +1,4 @@
 import {
-  Checkbox,
   IconButton,
   MenuItem,
   Popover,
@@ -117,11 +116,7 @@ export default function PromotionTableRow({
         <PromotionAdd open={openModal} isEdit id={id} setOpen={() => setOpenModal(false)} />
       )}
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
-        <TableCell padding="checkbox">
-          <Checkbox disableRipple checked={selected} onChange={handleClick} />
-        </TableCell>
-
-        <TableCell component="th" scope="row" padding="none">
+        <TableCell component="th" scope="row" padding="normal">
           <Stack direction="row" alignItems="center" spacing={2} width="150px">
             <Typography variant="subtitle2" noWrap overflow="hidden" textOverflow="ellipsis">
               {name}
