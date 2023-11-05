@@ -6,4 +6,9 @@ export const productService = {
     const data = await callApi('v1/product/get-all', methods.get, headers, null);
     return data;
   },
+  getAllProductPrices: async () => {
+    const headers = { 'Content-Type': 'application/json' };
+    const data = await callApi('v1/product/price', methods.get, headers, null);
+    return data;
+  },
 };

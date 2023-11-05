@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  Checkbox,
   IconButton,
   MenuItem,
   Popover,
@@ -96,11 +95,7 @@ export default function ProductCategoriesTableRow({
         />
       )}
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
-        <TableCell padding="checkbox">
-          <Checkbox disableRipple checked={selected} onChange={handleClick} />
-        </TableCell>
-
-        <TableCell component="th" scope="row" padding="none">
+        <TableCell component="th" scope="row" padding="normal">
           <Stack direction="row" alignItems="center" spacing={2}>
             <Typography variant="subtitle2" noWrap>
               {name}
