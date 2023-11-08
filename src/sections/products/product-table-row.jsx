@@ -50,7 +50,7 @@ export default function ProductTableRow({
 
         <TableCell component="th" scope="row" padding="none" align="center">
           <Stack direction="row" alignItems="center" spacing={2} justifyContent="center">
-            <Avatar alt="" src={avatar && `${import.meta.env.VITE_BACKEND_URL}uploads${avatar}`} />
+            <Avatar alt="" src={avatar && `${import.meta.env.VITE_BACKEND_URL}images/products${avatar}`} />
           </Stack>
         </TableCell>
 
