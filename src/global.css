@@ -48,3 +48,11 @@ body {
 ::-webkit-scrollbar-corner {
     /* background: #000; */
 }
+
+.ck-editor__editable {
+  height: auto !important;
+  min-height: 100px; /* Chiều cao tối thiểu của trình soạn thảo */
+  overflow-y: auto;
+  max-width: 100%;
+  white-space: pre-wrap;
+}
