@@ -69,8 +69,6 @@ const UserPage = () => {
     getAllUserData();
   }, []);
 
-  console.log(userData);
-
   const handleSort = (event, id) => {
     const isAsc = orderBy === id && order === 'asc';
     if (id !== '') {

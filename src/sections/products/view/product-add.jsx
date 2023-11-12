@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 import {
   Box,
   Button,
@@ -19,9 +21,9 @@ import {
 import { useFormik } from 'formik';
 import { useEffect, useRef, useState } from 'react';
 import * as Yup from 'yup';
+import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import { productActionThunk } from 'src/redux/actions/product-action';
-import { productCategoriesActionThunk } from 'src/redux/actions/product-categories-action';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import styled from 'styled-components';
@@ -31,6 +33,9 @@ import { NumericFormat } from 'react-number-format';
 import { productService } from 'src/apis/product-service';
 import { notify } from 'src/utils/untils';
 import { auth } from 'src/utils/auth';
+import { useParams } from 'react-router-dom';
+import { productCategoriesActionThunk } from 'src/redux/actions/product-categories-action';
+import { connection } from 'src/utils/signalR';
 
 const editorConfig = {
   enterMode: 'CKEditor5.EnterMode.PARAGRAPH',
@@ -43,6 +48,8 @@ const styleLabel = {
     fontSize: '13px',
   },
 };
+
+const filePath = `${import.meta.env.VITE_BACKEND_URL}images/products`;
 
 const defaultValues = {
   name: '',
@@ -72,20 +79,26 @@ const schema = Yup.object().shape({
   product_category_id: Yup.string().required('Vui lòng chọn danh mục hiển thị'),
 });
 
-export default function ProductAdd() {
+export default function ProductAdd({ isAdd }) {
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [selectedThumbnail, setSelectedThumbnail] = useState([]);
+  const [updateImage, setUpdateImage] = useState([]);
   const dispatch = useDispatch();
   const router = useRouter();
+  const { id } = useParams();
+  const editorRef = useRef(null);
 
   const { productCategories } = useSelector((state) => state.rootReducer.productCategories);
-  // const { products, productPrices } = useSelector((state) => state.rootReducer.products);
+  const { products, productPrices, getPriceById, getProductById } = useSelector(
+    (x) => x.rootReducer.products
+  );
+
   const fileInputAvatarRef = useRef(null);
   const fileInputThumbRef = useRef(null);
 
   const {
     values,
-    // setValues,
+    setValues,
     resetForm,
     setFieldValue,
     handleChange,
@@ -93,65 +106,69 @@ export default function ProductAdd() {
     errors,
     touched,
     handleSubmit,
+    dirty,
   } = useFormik({
     initialValues: defaultValues,
     validationSchema: schema,
     onSubmit: async (value) => {
-      console.log('Dữ liệu đã hợp lệ', value);
       const formData = new FormData();
-      const {
-        name,
-        description,
-        weight,
-        price,
-        detail,
-        avatar_file,
-        status,
-        stock,
-        home_flag,
-        hot_flag,
-        product_category_id,
-        storage,
-        created_by,
-        origin,
-      } = value;
-      Object.entries({
-        name,
-        description,
-        weight,
-        price,
-        detail,
-        avatar_file,
-        status,
-        stock,
-        home_flag,
-        hot_flag,
-        product_category_id,
-        storage,
-        created_by,
-        origin,
-      }).forEach(([key, item]) => formData.append(key, item));
       value.thumbnails_file.map((item) => formData.append('thumbnails_file', item));
-
+      Object.entries({
+        ...value,
+      }).forEach(([key, item]) => formData.append(key, item));
       handleSubmitForm(formData);
     },
   });
 
   useEffect(() => {
-    dispatch(productActionThunk.getProductPrices());
-  }, [dispatch]);
-  useEffect(() => {
     dispatch(productCategoriesActionThunk.getproductCategories());
   }, [dispatch]);
+
   useEffect(() => {
-    dispatch(productActionThunk.getProduct());
+    if (!isAdd) {
+      dispatch(productActionThunk.getProductById(id));
+      dispatch(productActionThunk.getPriceByProductId(id));
+    }
   }, [dispatch]);
+  useEffect(() => {
+    if (!isAdd) {
+      connection.on('RELOAD_DATA_CHANGE', () => {
+        dispatch(productActionThunk.getProductById(id));
+        dispatch(productActionThunk.getPriceByProductId(id));
+      });
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!isAdd) {
+      const map = [];
+      if (getProductById?.thumnails) {
+        const thumbs = JSON.parse(getProductById.thumnails);
+        thumbs.forEach((item) => {
+          map.push(`${filePath}${item.file_name}`);
+        });
+      }
+      setSelectedThumbnail(map);
+      setUpdateImage(map);
+
+      if (getProductById?.avatar) {
+        defaultValues.avatar_file = getProductById.avatar;
+        setSelectedAvatar(`${filePath}${defaultValues?.avatar_file}`);
+      }
+      const val = {
+        ...defaultValues,
+        ...getPriceById,
+        ...getProductById,
+      };
+      resetForm({ values: val, dirty: false });
+    }
+  }, [getPriceById, getProductById]);
 
   useEffect(() => {
     const userData = auth.GetUserInfo();
     const { full_name } = userData;
     setFieldValue('created_by', full_name);
-  }, [setFieldValue]);
+  }, []);
 
   const handleFileChanges = (event) => {
     const file = event.target.files[0];
@@ -182,40 +199,64 @@ export default function ProductAdd() {
   useEffect(() => {
     const uploadedFiles = [];
     selectedThumbnail.forEach((imageDataUrl, index) => {
-      fetch(imageDataUrl)
-        .then((response) => response.blob())
-        .then((blob) => {
-          const fileExtension = selectedThumbnail[index].split(';')[0].split('/')[1];
-          const fileName = `${values.name}-${Math.random()
-            .toString(36)
-            .substring(2, 7)}-${Date.now()}.${fileExtension}`;
-          const file = new File([blob], fileName, { type: blob.type });
-          uploadedFiles.push(file);
+      if (imageDataUrl !== updateImage[index]) {
+        fetch(imageDataUrl)
+          .then((response) => response.blob())
+          .then((blob) => {
+            const fileExtension = selectedThumbnail[index].split(';')[0].split('/')[1];
+            const fileName = `${values.name}-${Math.random()
+              .toString(36)
+              .substring(2, 7)}-${Date.now()}.${fileExtension}`;
+            const file = new File([blob], fileName, { type: blob.type });
+            uploadedFiles.push(file);
 
-          if (uploadedFiles.length === selectedThumbnail.length) {
-            setFieldValue('thumbnails_file', uploadedFiles);
-          }
-        });
+            if (isAdd) {
+              if (uploadedFiles.length === selectedThumbnail.length) {
+                setFieldValue('thumbnails_file', uploadedFiles);
+              }
+            } else {
+              setFieldValue('thumbnails_file', uploadedFiles);
+            }
+          });
+      }
     });
-  }, [selectedThumbnail, setFieldValue, values.name]);
+  }, [selectedThumbnail, values.name]);
 
   const handleDeleteImageUpload = (index) => {
     const updatedSelectedThumbnail = selectedThumbnail.filter((item, i) => i !== index);
     setSelectedThumbnail(updatedSelectedThumbnail);
   };
 
-  const handleSubmitForm = async (body) => {
-    const { data, status } = await productService.CreateNewProduct(body);
-    const { message } = data;
-    notify(message, status);
+  const handleCancelEdit = () => {
     resetForm();
-    setSelectedAvatar(null);
     setSelectedThumbnail([]);
+    setSelectedAvatar(null);
+    router.push('/products');
+  };
+
+  const handleSubmitForm = async (param) => {
+    if (!isAdd) {
+      const { data, status } = await productService.UpdateProduct(param);
+      await productService.UpdateImageProduct(param);
+      await productService.UpdatePriceProduct(param);
+      const { message } = data;
+      notify(message, status);
+    } else {
+      const { data, status } = await productService.CreateNewProduct(param);
+      const { message } = data;
+      notify(message, status);
+      resetForm();
+      if (editorRef && editorRef.current && editorRef.current.editor) {
+        editorRef.current.editor.setData('');
+      }
+      setSelectedAvatar(null);
+      setSelectedThumbnail([]);
+    }
   };
 
   return (
     <Container>
-      <Typography variant="h4">Thêm mới sản phẩm</Typography>
+      <Typography variant="h4">{isAdd ? 'Thêm mới sản phẩm' : 'Chỉnh sửa sản phẩm'}</Typography>
       <Grid
         container
         direction="row"
@@ -281,7 +322,7 @@ export default function ProductAdd() {
                 variant="contained"
                 sx={{
                   position: 'absolute',
-                  backgroundColor: `${selectedAvatar ? 'transparent' : '#d3d4d5'}`,
+                  backgroundColor: 'transparent',
                   top: '50%',
                   left: '50%',
                   transform: 'translate(-50%, -50%)',
@@ -385,11 +426,15 @@ export default function ProductAdd() {
                   <CKEditor
                     id="detail"
                     name="detail"
+                    data={isAdd ? '' : values.detail}
                     editor={ClassicEditor}
                     config={editorConfig}
                     onChange={(event, editor) => {
                       const data = editor.getData();
                       setFieldValue('detail', data);
+                    }}
+                    onReady={(editor) => {
+                      editorRef.current = editor;
                     }}
                   />
                 </Grid>
@@ -428,7 +473,7 @@ export default function ProductAdd() {
                       </Stack>
                     </StyleUpLoadImage>
                     <Box margin="24px 0">
-                      {selectedThumbnail.length > 0 &&
+                      {selectedThumbnail?.length > 0 &&
                         selectedThumbnail.map((item, index) => (
                           <StyleListImage key={index}>
                             <Stack
@@ -629,7 +674,7 @@ export default function ProductAdd() {
                     variant="outlined"
                     color="inherit"
                     type="button"
-                    onClick={() => router.push('/products')}
+                    onClick={handleCancelEdit}
                   >
                     Hủy
                   </Button>
@@ -638,8 +683,9 @@ export default function ProductAdd() {
                     color="inherit"
                     sx={{ backgroundColor: 'black' }}
                     type="submit"
+                    disabled={!isAdd && !dirty}
                   >
-                    Thêm mới
+                    {isAdd ? 'Thêm mới' : 'Cập nhật'}
                   </Button>
                 </Grid>
               </Grid>
@@ -650,6 +696,10 @@ export default function ProductAdd() {
     </Container>
   );
 }
+
+ProductAdd.propTypes = {
+  isAdd: PropTypes.bool,
+};
 
 const StyleUpLoadImage = styled.div`
   padding: 40px;
