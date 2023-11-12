@@ -12,6 +12,7 @@ import {
 import PropTypes from 'prop-types';
 import { useState } from 'react';
 import Iconify from 'src/components/iconify';
+import { useRouter } from 'src/routes/hooks';
 
 export default function ProductTableRow({
   name,
@@ -25,9 +26,7 @@ export default function ProductTableRow({
   hanldeGetId,
 }) {
   const [open, setOpen] = useState(null);
-  //   const [openModalDelete, setOpenModalDelete] = useState(false);
-  //   const [openModalEdit, setOpenModalEdit] = useState(false);
-  //   const [id, setId] = useState(null);
+  const router = useRouter();
 
   const handleOpenMenu = (event) => {
     setOpen(event.currentTarget);
@@ -35,6 +34,12 @@ export default function ProductTableRow({
 
   const handleCloseMenu = (event) => {
     setOpen(null);
+  };
+
+  const handleProduct = (event) => {
+    const productId = hanldeGetId(event);
+    setOpen(null);
+    router.push(`${productId}/edit`);
   };
 
   return (
@@ -50,7 +55,10 @@ export default function ProductTableRow({
 
         <TableCell component="th" scope="row" padding="none" align="center">
           <Stack direction="row" alignItems="center" spacing={2} justifyContent="center">
-            <Avatar alt="" src={avatar && `${import.meta.env.VITE_BACKEND_URL}images/products${avatar}`} />
+            <Avatar
+              alt=""
+              src={avatar && `${import.meta.env.VITE_BACKEND_URL}images/products${avatar}`}
+            />
           </Stack>
         </TableCell>
 
@@ -99,7 +107,7 @@ export default function ProductTableRow({
           sx: { width: 140 },
         }}
       >
-        <MenuItem>
+        <MenuItem onClick={(event) => handleProduct(event)}>
           <Iconify icon="eva:edit-fill" sx={{ mr: 2 }} />
           Edit
         </MenuItem>

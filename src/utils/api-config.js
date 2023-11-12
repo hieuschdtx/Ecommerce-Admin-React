@@ -21,7 +21,6 @@ export const callApi = async (path, method, headers, body) => {
     return { data, status };
   } catch (error) {
     if (error.response) {
-      console.log(error.response);
       const { data, status } = error.response;
       return { data, status };
     }

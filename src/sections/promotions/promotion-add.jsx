@@ -21,7 +21,7 @@ import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import { promotionService } from 'src/apis/promotion-service';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { auth } from 'src/utils/auth';
 import { notify } from 'src/utils/untils';
 import { useSelector } from 'react-redux';
@@ -70,7 +70,6 @@ const schema = Yup.object()
   .required();
 
 export default function PromotionAdd({ open, setOpen, isEdit, id = '' }) {
-  const [isDisabled, setIsDisabled] = useState(false);
   const { promotion } = useSelector((state) => state.rootReducer.promotions);
   const {
     errors,
@@ -82,6 +81,8 @@ export default function PromotionAdd({ open, setOpen, isEdit, id = '' }) {
     handleSubmit,
     resetForm,
     setValues,
+    dirty,
+    isSubmitting,
   } = useFormik({
     initialValues: defaultValues,
     validationSchema: schema,
@@ -96,7 +97,6 @@ export default function PromotionAdd({ open, setOpen, isEdit, id = '' }) {
   const handleSubmitForm = async (value) => {
     if (isEdit && id !== '') {
       const data = await promotionService.updatePromotion(id, value);
-      console.log(data);
       return data;
     }
     const data = await promotionService.createPromotion(value);
@@ -131,26 +131,6 @@ export default function PromotionAdd({ open, setOpen, isEdit, id = '' }) {
       setFieldValue('modified_by', full_name);
     }
   }, [setFieldValue, isEdit]);
-
-  useEffect(() => {
-    const { name, discount, from_day, to_day, status } = values;
-    setIsDisabled(
-      !(
-        name !== dataPromotion.name ||
-        discount !== dataPromotion.discount ||
-        status !== dataPromotion.status ||
-        from_day !== dataPromotion.from_day ||
-        to_day !== dataPromotion.to_day
-      )
-    );
-  }, [
-    values,
-    dataPromotion.discount,
-    dataPromotion.name,
-    dataPromotion.from_day,
-    dataPromotion.status,
-    dataPromotion.to_day,
-  ]);
 
   return (
     <Modal
@@ -280,7 +260,7 @@ export default function PromotionAdd({ open, setOpen, isEdit, id = '' }) {
                   variant="contained"
                   color={isEdit ? 'error' : 'primary'}
                   type="submit"
-                  disabled={isEdit && isDisabled}
+                  disabled={dirty || isSubmitting}
                 >
                   {isEdit ? 'Cập nhật' : 'Tạo mới'}
                 </Button>

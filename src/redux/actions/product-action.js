@@ -10,7 +10,22 @@ const getProductPrices = createAsyncThunk('PRODUCT_PRICES_GET_PRODUCT_PRICES', a
   return data;
 });
 
+const getPriceByProductId = createAsyncThunk(
+  'PRODUCT_PRICES_GET_BY_ID_PRODUCT_PRICES',
+  async (p) => {
+    const { data } = await productService.getPriceByProductId(p);
+    return data;
+  }
+);
+
+const getProductById = createAsyncThunk('PRODUCT_GET_BY_ID_PRODUCTS', async (p) => {
+  const { data } = await productService.getProductById(p);
+  return data;
+});
+
 export const productActionThunk = {
   getProduct,
   getProductPrices,
+  getPriceByProductId,
+  getProductById,
 };

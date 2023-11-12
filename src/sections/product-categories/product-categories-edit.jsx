@@ -87,7 +87,6 @@ export default function ProductCategoriesEdit({ open, handleClose, proCategory }
       initialValues: defaultValues,
       validationSchema: validationForm,
       onSubmit: async (value) => {
-        console.log(value);
         const body = {
           name: value.name,
           description: value.description,

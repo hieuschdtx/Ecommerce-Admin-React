@@ -50,7 +50,6 @@ export default function ProductCategoriesAdd({ open, handleClose }) {
     },
     validationSchema: validationForm,
     onSubmit: async (values, { resetForm }) => {
-      console.log(values);
       handleClose();
       values.created_by = fullName;
       const { data, status } = await productCategoriesService.createProductCategory(values);

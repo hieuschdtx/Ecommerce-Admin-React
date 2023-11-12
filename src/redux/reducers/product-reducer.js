@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { productActionThunk } from '../actions/product-action';
 
-const { getProduct, getProductPrices } = productActionThunk;
+const { getProduct, getProductPrices, getPriceByProductId, getProductById } = productActionThunk;
 
 const productSilce = createSlice({
   name: 'PRODUCT',
@@ -12,6 +12,8 @@ const productSilce = createSlice({
     message: '',
     success: false,
     error: false,
+    getPriceById: [],
+    getProductById: [],
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -23,13 +25,49 @@ const productSilce = createSlice({
         state.loading = false;
         state.products = action.payload;
       })
+
       .addCase(getProductPrices.pending, (state) => {
         state.loading = true;
       })
       .addCase(getProductPrices.fulfilled, (state, action) => ({
         ...state,
         productPrices: action.payload,
+      }))
+
+      .addCase(getPriceByProductId.pending, (state, action) => ({
+        ...state,
+      }))
+      .addCase(getPriceByProductId.fulfilled, (state, action) => ({
+        ...state,
+        loading: false,
+        getPriceById: action.payload,
+      }))
+      // .addCase(getPriceByProductId.rejected, (state, action) => ({
+      //   ...state,
+      //   getPriceById: {
+      //     ...apiState,
+      //     loading: false,
+      //     message: { type: action.type, message: action.error.message },
+      //   },
+      // }))
+
+      .addCase(getProductById.pending, (state, action) => ({
+        ...state,
+        loading: true,
+      }))
+      .addCase(getProductById.fulfilled, (state, action) => ({
+        ...state,
+        loading: false,
+        getProductById: action.payload,
       }));
+    // .addCase(getProductById.rejected, (state, action) => ({
+    //   ...state,
+    //   getProductById: {
+    //     ...apiState,
+    //     loading: false,
+    //     message: { type: action.type, message: action.error.message },
+    //   },
+    // }));
   },
 });
 
