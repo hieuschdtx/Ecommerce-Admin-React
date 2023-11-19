@@ -19,7 +19,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useFormik } from 'formik';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import * as Yup from 'yup';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
@@ -79,10 +79,11 @@ const schema = Yup.object().shape({
   product_category_id: Yup.string().required('Vui lòng chọn danh mục hiển thị'),
 });
 
-export default function ProductAdd({ isAdd }) {
+const ProductAdd = ({ isAdd }) => {
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [selectedThumbnail, setSelectedThumbnail] = useState([]);
   const [updateImage, setUpdateImage] = useState([]);
+  const [deleteImage, setdeleteImage] = useState([]);
   const dispatch = useDispatch();
   const router = useRouter();
   const { id } = useParams();
@@ -117,6 +118,16 @@ export default function ProductAdd({ isAdd }) {
         ...value,
       }).forEach(([key, item]) => formData.append(key, item));
       handleSubmitForm(formData);
+      if (value.thumbnails_file.length > 0) {
+        handleEditImage(formData);
+      }
+      if (value.price !== getPriceById.price || value.weight !== getPriceById.weight) {
+        handleEditPrice(formData);
+      }
+      if (deleteImage.length > 0) {
+        deleteImage.map((item) => formData.append('files_name', item.file_name));
+        handleDeleteThumbs(formData);
+      }
     },
   });
 
@@ -148,12 +159,11 @@ export default function ProductAdd({ isAdd }) {
           map.push(`${filePath}${item.file_name}`);
         });
       }
-      setSelectedThumbnail(map);
       setUpdateImage(map);
+      setSelectedThumbnail(map);
 
       if (getProductById?.avatar) {
-        defaultValues.avatar_file = getProductById.avatar;
-        setSelectedAvatar(`${filePath}${defaultValues?.avatar_file}`);
+        setSelectedAvatar(`${filePath}${getProductById?.avatar}`);
       }
       const val = {
         ...defaultValues,
@@ -197,48 +207,49 @@ export default function ProductAdd({ isAdd }) {
   };
 
   useEffect(() => {
-    const uploadedFiles = [];
-    selectedThumbnail.forEach((imageDataUrl, index) => {
-      if (imageDataUrl !== updateImage[index]) {
-        fetch(imageDataUrl)
-          .then((response) => response.blob())
-          .then((blob) => {
-            const fileExtension = selectedThumbnail[index].split(';')[0].split('/')[1];
-            const fileName = `${values.name}-${Math.random()
-              .toString(36)
-              .substring(2, 7)}-${Date.now()}.${fileExtension}`;
-            const file = new File([blob], fileName, { type: blob.type });
-            uploadedFiles.push(file);
-
-            if (isAdd) {
-              if (uploadedFiles.length === selectedThumbnail.length) {
-                setFieldValue('thumbnails_file', uploadedFiles);
-              }
-            } else {
-              setFieldValue('thumbnails_file', uploadedFiles);
-            }
-          });
-      }
+    Promise.all(
+      selectedThumbnail.map((imageDataUrl, index) => {
+        if (!updateImage.includes(imageDataUrl)) {
+          return fetch(imageDataUrl)
+            .then((response) => response.blob())
+            .then((blob) => {
+              const fileExtension = selectedThumbnail[index].split(';')[0].split('/')[1];
+              const fileName = `${values.name}-${Math.random()
+                .toString(36)
+                .substring(2, 7)}-${Date.now()}.${fileExtension}`;
+              return new File([blob], fileName, { type: blob.type });
+            });
+        }
+        return [];
+      })
+    ).then((uploadedFiles) => {
+      const filteredFiles = uploadedFiles.filter((file) => file.length !== 0);
+      setFieldValue('thumbnails_file', filteredFiles);
     });
-  }, [selectedThumbnail, values.name]);
+  }, [selectedThumbnail, setFieldValue, values.name]);
 
   const handleDeleteImageUpload = (index) => {
-    const updatedSelectedThumbnail = selectedThumbnail.filter((item, i) => i !== index);
-    setSelectedThumbnail(updatedSelectedThumbnail);
+    const regex = /products(.*)/;
+
+    const updatedSelectedThumbnails = selectedThumbnail.filter((item, i) => i !== index);
+    const thumbs = JSON.parse(values.thumnails);
+
+    const deleteFileThumbnail = selectedThumbnail[index];
+
+    const deletedFile = thumbs.find(
+      (img) => img.file_name === deleteFileThumbnail.match(regex)?.[1]
+    );
+    if (deletedFile) setdeleteImage((prev) => [...prev, deletedFile]);
+    setSelectedThumbnail(updatedSelectedThumbnails);
   };
 
   const handleCancelEdit = () => {
-    resetForm();
-    setSelectedThumbnail([]);
-    setSelectedAvatar(null);
     router.push('/products');
   };
 
   const handleSubmitForm = async (param) => {
     if (!isAdd) {
       const { data, status } = await productService.UpdateProduct(param);
-      await productService.UpdateImageProduct(param);
-      await productService.UpdatePriceProduct(param);
       const { message } = data;
       notify(message, status);
     } else {
@@ -252,6 +263,18 @@ export default function ProductAdd({ isAdd }) {
       setSelectedAvatar(null);
       setSelectedThumbnail([]);
     }
+  };
+
+  const handleEditImage = async (param) => {
+    await productService.UpdateImageProduct(param);
+  };
+
+  const handleEditPrice = async (param) => {
+    await productService.UpdatePriceProduct(param);
+  };
+
+  const handleDeleteThumbs = async (param) => {
+    await productService.DelteImageProduct(param);
   };
 
   return (
@@ -695,7 +718,9 @@ export default function ProductAdd({ isAdd }) {
       </Grid>
     </Container>
   );
-}
+};
+
+export default memo(ProductAdd);
 
 ProductAdd.propTypes = {
   isAdd: PropTypes.bool,

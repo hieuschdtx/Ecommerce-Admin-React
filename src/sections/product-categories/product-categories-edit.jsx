@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import {
   Box,
   Button,
@@ -77,32 +78,14 @@ const validationForm = Yup.object({
 
 export default function ProductCategoriesEdit({ open, handleClose, proCategory }) {
   const [fullName, setFullName] = useState(null);
-  const [isDisabled, setIsDisabled] = useState(true);
   const { promotion } = useSelector((state) => state.rootReducer.promotions);
   const { categories } = useSelector((state) => state.rootReducer.category);
   const { productCategories } = useSelector((state) => state.rootReducer.productCategories);
 
-  const { values, setValues, resetForm, handleChange, handleBlur, errors, touched, handleSubmit } =
+  const { values, dirty, resetForm, handleChange, handleBlur, errors, isSubmitting, touched } =
     useFormik({
       initialValues: defaultValues,
       validationSchema: validationForm,
-      onSubmit: async (value) => {
-        const body = {
-          name: value.name,
-          description: value.description,
-          modified_by: fullName,
-          promotion_id: value.promotion_id,
-          category_id: value.category_id,
-        };
-        const { data, status } = await productCategoriesService.updateProductCategory(
-          value.id,
-          body
-        );
-        const { message } = data;
-        notify(message, status);
-        resetForm();
-        handleClose();
-      },
     });
 
   const filterProductCategory = useMemo(
@@ -113,9 +96,9 @@ export default function ProductCategoriesEdit({ open, handleClose, proCategory }
   useEffect(() => {
     if (filterProductCategory) {
       const val = { ...defaultValues, ...filterProductCategory };
-      setValues(val);
+      resetForm({ values: val, dirty: false });
     }
-  }, [filterProductCategory, setValues]);
+  }, [filterProductCategory]);
 
   useEffect(() => {
     const userData = auth.GetUserInfo();
@@ -123,23 +106,22 @@ export default function ProductCategoriesEdit({ open, handleClose, proCategory }
     setFullName(full_name);
   }, [fullName]);
 
-  useEffect(() => {
-    const { name, description, promotion_id, category_id } = values;
-    setIsDisabled(
-      !(
-        name !== filterProductCategory.name ||
-        description !== filterProductCategory.description ||
-        category_id !== filterProductCategory.category_id ||
-        promotion_id !== filterProductCategory.promotion_id
-      )
-    );
-  }, [
-    values,
-    filterProductCategory.description,
-    filterProductCategory.name,
-    filterProductCategory.promotion_id,
-    filterProductCategory.category_id,
-  ]);
+  const handleSubmitForm = async (e) => {
+    e.preventDefault();
+    console.log(values);
+    const body = {
+      name: values.name,
+      description: values.description,
+      modified_by: fullName,
+      promotion_id: values.promotion_id,
+      category_id: values.category_id,
+    };
+    const { data, status } = await productCategoriesService.updateProductCategory(values.id, body);
+    const { message } = data;
+    notify(message, status);
+    resetForm();
+    handleClose();
+  };
 
   return (
     <Modal
@@ -158,7 +140,7 @@ export default function ProductCategoriesEdit({ open, handleClose, proCategory }
             Edit Product category
           </Typography>
           <Box>
-            <form onSubmit={handleSubmit}>
+            <form id="form" onSubmit={(e) => handleSubmitForm(e)}>
               <Grid direction="row" container spacing={2}>
                 <Grid item xs={12} sm={7}>
                   <TextField
@@ -309,7 +291,12 @@ export default function ProductCategoriesEdit({ open, handleClose, proCategory }
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} textAlign="start">
-                  <Button variant="contained" color="error" type="submit" disabled={isDisabled}>
+                  <Button
+                    variant="contained"
+                    color="error"
+                    type="submit"
+                    disabled={!dirty || isSubmitting}
+                  >
                     Update
                   </Button>
                 </Grid>

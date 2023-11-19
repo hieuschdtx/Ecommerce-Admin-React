@@ -260,7 +260,7 @@ export default function PromotionAdd({ open, setOpen, isEdit, id = '' }) {
                   variant="contained"
                   color={isEdit ? 'error' : 'primary'}
                   type="submit"
-                  disabled={dirty || isSubmitting}
+                  disabled={!dirty || isSubmitting}
                 >
                   {isEdit ? 'Cập nhật' : 'Tạo mới'}
                 </Button>
