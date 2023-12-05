@@ -23,7 +23,6 @@ const App = () => {
     setConnections(connection);
   }, []);
 
-  // eslint-disable-next-line consistent-return
   useEffect(() => {
     if (connections) {
       connections.start().then(() => {
