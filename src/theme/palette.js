@@ -118,7 +118,7 @@ export function palette() {
     },
     background: {
       paper: '#FFFFFF',
-      default: grey[100],
+      default: '#FFFFFF',
       neutral: grey[200],
     },
     action: {

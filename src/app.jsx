@@ -41,7 +41,6 @@ const App = () => {
     const hasAccess = auth.GetAccess();
 
     if (!(isAuthenticated && hasAccess)) {
-      console.log('Tài khoản không có quyền truy cập hoặc đã hết phiên làm việc');
       router.push('/login');
     }
   }, [router]);

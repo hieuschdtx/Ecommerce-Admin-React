@@ -57,7 +57,6 @@ function FormInfoUser() {
     },
     validationSchema: validationForm,
     onSubmit: async (values) => {
-      console.log('Dữ liệu đã hợp lệ', values);
       const formData = new FormData();
       formData.append('full_name', values.full_name);
       formData.append('avatar_file', values.avatar_file);

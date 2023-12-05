@@ -1,57 +1,50 @@
+import Iconify from 'src/components/iconify';
 import SvgColor from 'src/components/svg-color';
 
 // ----------------------------------------------------------------------
 
-const icon = (name) => (
-  <SvgColor src={`/assets/icons/navbar/${name}.svg`} sx={{ width: 1, height: 1 }} />
-);
+const icon = (name) => <Iconify icon={name} sx={{ width: 1, height: 1 }} />;
 
 const navConfig = [
   {
-    title: 'dashboard',
+    title: 'Thống kê',
     path: '/',
-    icon: icon('ic_analytics'),
+    icon: icon('fa:dashboard'),
   },
   {
-    title: 'category',
+    title: 'Danh mục',
     path: '/category',
-    icon: icon('ic_analytics'),
+    icon: icon('tabler:category-filled'),
   },
   {
-    title: 'product category',
+    title: 'Danh mục sản phẩm',
     path: '/product-category',
-    icon: icon('ic_lock'),
+    icon: icon('dashicons:products'),
   },
   {
-    title: 'product',
+    title: 'Sản phẩm',
     path: '/products',
-    icon: icon('ic_cart'),
+    icon: icon('fa6-brands:product-hunt'),
   },
   {
-    title: 'promotion',
+    title: 'Khuyến mãi',
     path: '/promotion',
-    icon: icon('ic_cart'),
+    icon: icon('foundation:burst-sale'),
   },
   {
-    title: 'user',
+    title: 'Tài khoản',
     path: '/user',
-    icon: icon('ic_user'),
+    icon: icon('solar:user-bold'),
   },
   {
-    title: 'blog',
+    title: 'Bài viết',
     path: '/blog',
-    icon: icon('ic_blog'),
+    icon: icon('dashicons:welcome-write-blog'),
   },
   {
-    title: 'logout',
+    title: 'Đăng xuất',
     path: '/logout',
-    icon: icon('ic_lock'),
-  },
-
-  {
-    title: 'Not found',
-    path: '/404',
-    icon: icon('ic_disabled'),
+    icon: icon('clarity:logout-solid'),
   },
 ];
 
