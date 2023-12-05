@@ -1,4 +1,3 @@
-/* eslint-disable no-return-await */
 import { HEADERS_TYPE } from 'src/resources/common';
 import { callApi, methods } from 'src/utils/api-config';
 
