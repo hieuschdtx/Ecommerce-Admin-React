@@ -115,7 +115,7 @@ export default function CategoriesView() {
     <>
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
-          <Typography variant="h4">Categories</Typography>
+          <Typography variant="h4">Danh mục</Typography>
 
           <Button
             variant="contained"
@@ -123,7 +123,7 @@ export default function CategoriesView() {
             startIcon={<Iconify icon="eva:plus-fill" />}
             onClick={() => setOpen(true)}
           >
-            New Category
+            Thêm mới
           </Button>
         </Stack>
 
@@ -132,7 +132,7 @@ export default function CategoriesView() {
             numSelected={selected.length}
             filterName={filterName}
             onFilterName={handleFilterByName}
-            placeHolder="Search category..."
+            placeHolder="Tìm kiếm danh mục..."
           />
 
           <Scrollbar>
@@ -146,10 +146,10 @@ export default function CategoriesView() {
                   onRequestSort={handleSort}
                   onSelectAllClick={handleSelectAllClick}
                   headLabel={[
-                    { id: 'name', label: 'Name' },
-                    { id: 'description', label: 'Description' },
-                    { id: 'createdBy', label: 'Created by' },
-                    { id: 'createdAt', label: 'Created at' },
+                    { id: 'name', label: 'Tên' },
+                    { id: 'description', label: 'Mô tả' },
+                    { id: 'createdBy', label: 'Người tạo' },
+                    { id: 'createdAt', label: 'Ngày tạo' },
                     { id: '' },
                   ]}
                 />

@@ -41,7 +41,6 @@ export default function Nav({ openNav, onCloseNav }) {
 
   useEffect(() => {
     if (!Array.isArray(user)) {
-      console.log(user.role_id);
       dispatch(roleActionThunk.getRoleById({ id: user.role_id }));
     }
   }, [user]);

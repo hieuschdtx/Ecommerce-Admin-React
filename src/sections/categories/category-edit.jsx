@@ -5,19 +5,26 @@ import {
   Grid,
   IconButton,
   Modal,
+  Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import PropTypes from 'prop-types';
-import { useFormik } from 'formik';
-import { useMemo, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import * as Yup from 'yup';
 import { useSelector } from 'react-redux';
 import { notify } from 'src/utils/untils';
 import { CategoryService } from 'src/apis/category-service';
-import { auth } from 'src/utils/auth';
 import { fDateTime } from 'src/utils/format-time';
 import Iconify from '../../components/iconify';
+import { Controller, useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { useResponsive } from 'src/hooks/use-responsive';
+import styled from 'styled-components';
+
+const fontSize = {
+  fontSize: 13,
+};
 
 const style = {
   position: 'absolute',
@@ -28,55 +35,59 @@ const style = {
   border: 'none',
   borderRadius: '16px',
   p: 3,
-  width: '45%',
+  width: '70%',
 };
 
+const defaultValues = {
+  id: '',
+  name: '',
+  description: '',
+  created_by: '',
+  created_at: new Date(),
+  modified_by: '',
+  modified_at: new Date(),
+};
+
+const schema = Yup.object()
+  .shape({
+    name: Yup.string().required('Vui lòng nhập tên'),
+    description: Yup.string().required('Vui lòng nhập mô tả'),
+  })
+  .required();
+
 const CategoryEdit = ({ open, handleClose, categoryId }) => {
-  const [isDisabled, setIsDisabled] = useState(true);
-  const [fullName, setFullName] = useState(null);
-
   const { categories } = useSelector((state) => state.rootReducer.category);
-  const categoryById = useMemo(
-    () => categories.find((item) => item.id === categoryId),
-    [categoryId, categories]
-  );
+  const { user } = useSelector((x) => x.rootReducer.user);
+  const mdUp = useResponsive('up', 'md');
 
-  const formik = useFormik({
-    initialValues: {
-      id: categoryById.id,
-      name: categoryById.name,
-      description: categoryById.description,
-      created_by: categoryById.created_by,
-      created_at: categoryById.created_at,
-      modified_by: categoryById.modified_by,
-      modified_at: categoryById.modified_at,
-    },
-    validationSchema: validationForm,
-    onSubmit: async (values, { resetForm }) => {
-      const body = {
-        name: values.name,
-        description: values.description,
-        modified_by: fullName,
-      };
+  useEffect(() => {
+    const val = categories.find((item) => item.id === categoryId);
+    reset({ ...defaultValues, ...val });
+  }, [categoryId, categories]);
 
-      const { data, status } = await CategoryService.UpdateCategory(values.id, body);
-      const { message } = data;
-      notify(message, status);
-      handleClose();
-      resetForm();
-    },
+  const {
+    handleSubmit,
+    reset,
+    control,
+    watch,
+    formState: { errors, isValid, isSubmitting, isDirty },
+  } = useForm({
+    mode: 'onBlur',
+    defaultValues,
+    resolver: yupResolver(schema),
   });
 
-  useEffect(() => {
-    const { name, description } = formik.values;
-    setIsDisabled(!(name !== categoryById.name || description !== categoryById.description));
-  }, [categoryById.name, categoryById.description, formik.values]);
+  const onSubmitUpdate = async (value) => {
+    console.log(value);
+    const {
+      data: { message },
+      status,
+    } = await CategoryService.UpdateCategory({ ...value, modified_by: user.full_name });
 
-  useEffect(() => {
-    const userData = auth.GetUserInfo();
-    const { full_name } = userData;
-    setFullName(full_name);
-  }, [fullName]);
+    notify(message, status);
+    handleClose();
+    reset({ ...defaultValues });
+  };
 
   return (
     <Modal
@@ -90,120 +101,155 @@ const CategoryEdit = ({ open, handleClose, categoryId }) => {
           <Iconify icon="iconamoon:close" width={24} height={24} />
         </IconButton>
         <Typography id="modal-modal-title" variant="h6" component="h2" mb={2}>
-          Update Category
+          Cập nhật danh mục
         </Typography>
         <Box>
-          <form onSubmit={formik.handleSubmit}>
-            <Grid direction="row" container spacing={2}>
-              <Grid item xs={12} sm={7}>
-                <TextField
-                  label="Id"
+          <FormEdit id="form" onSubmit={handleSubmit(onSubmitUpdate)}>
+            <Stack direction="column" spacing={3}>
+              <Stack direction={mdUp ? 'row' : 'column'} spacing={2}>
+                <Controller
                   name="id"
-                  fullWidth
-                  value={formik.values.id}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.id && !!formik.errors.id}
-                  helperText={formik.touched.id && formik.errors.id}
-                  disabled
-                  required
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Id"
+                      name="id"
+                      fullWidth
+                      disabled
+                      inputProps={{ sx: { fontSize } }}
+                      InputLabelProps={{ sx: fontSize }}
+                    />
+                  )}
                 />
-              </Grid>
-              <Grid item xs={12} sm={5}>
-                <TextField
-                  label="Name"
+                <Controller
                   name="name"
-                  fullWidth
-                  value={formik.values.name}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.name && !!formik.errors.name}
-                  helperText={formik.touched.name && formik.errors.name}
-                  required
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Tên danh mục"
+                      name="name"
+                      fullWidth
+                      required
+                      error={!!errors.name}
+                      helperText={errors.name?.message}
+                      inputProps={{ sx: { fontSize } }}
+                      InputLabelProps={{ sx: fontSize }}
+                    />
+                  )}
                 />
-              </Grid>
-              <Grid item xs={12} sm={12}>
-                <TextField
-                  label="Description"
+              </Stack>
+              <Stack direction={mdUp ? 'row' : 'column'}>
+                <Controller
                   name="description"
-                  fullWidth
-                  value={formik.values.description}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.description && !!formik.errors.description}
-                  helperText={formik.touched.description && formik.errors.description}
-                  required
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Mô tả danh mục"
+                      name="description"
+                      multiline
+                      minRows={3}
+                      fullWidth
+                      error={!!errors.description}
+                      helperText={errors.description?.message}
+                      required
+                      inputProps={{ sx: { fontSize } }}
+                      InputLabelProps={{ sx: fontSize }}
+                    />
+                  )}
                 />
-              </Grid>
+              </Stack>
 
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Created by"
+              <Stack direction={mdUp ? 'row' : 'column'} spacing={2}>
+                <Controller
                   name="created_by"
-                  fullWidth
-                  value={formik.values.created_by}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.created_by && !!formik.errors.created_by}
-                  helperText={formik.touched.created_by && formik.errors.created_by}
-                  disabled
-                  required
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Người tạo"
+                      name="created_by"
+                      fullWidth
+                      disabled
+                      inputProps={{ sx: { fontSize } }}
+                      InputLabelProps={{ sx: fontSize }}
+                    />
+                  )}
                 />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Created at"
+                <Controller
                   name="created_at"
-                  fullWidth
-                  value={fDateTime(formik.values.created_at)}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.created_at && !!formik.errors.created_at}
-                  helperText={formik.touched.created_at && formik.errors.created_at}
-                  disabled
-                  required
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      name="created_at"
+                      value={fDateTime(watch('created_at'))}
+                      label="Ngày tạo"
+                      fullWidth
+                      disabled
+                      inputProps={{ sx: { fontSize } }}
+                      InputLabelProps={{ sx: fontSize }}
+                    />
+                  )}
                 />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Modified by"
+              </Stack>
+
+              <Stack direction={mdUp ? 'row' : 'column'} spacing={2}>
+                <Controller
                   name="modified_by"
-                  fullWidth
-                  value={formik.values.modified_by || 'null'}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.modified_by && !!formik.errors.modified_by}
-                  helperText={formik.touched.modified_by && formik.errors.modified_by}
-                  disabled
-                  required
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      name="modified_by"
+                      label="Người chỉnh sửa"
+                      value={watch('modified_by') || 'null'}
+                      fullWidth
+                      disabled
+                      inputProps={{ sx: { fontSize } }}
+                      InputLabelProps={{ sx: fontSize }}
+                    />
+                  )}
                 />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Modified at"
+                <Controller
                   name="modified_at"
-                  fullWidth
-                  value={fDateTime(formik.values.modified_at) || 'null'}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.modified_at && !!formik.errors.modified_at}
-                  helperText={formik.touched.modified_at && formik.errors.modified_at}
-                  disabled
-                  required
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      name="modified_at"
+                      label="Ngày chỉnh sửa"
+                      value={fDateTime(watch('modified_at')) || 'null'}
+                      fullWidth
+                      disabled
+                      inputProps={{ sx: { fontSize } }}
+                      InputLabelProps={{ sx: fontSize }}
+                    />
+                  )}
                 />
-              </Grid>
-              <Grid item xs={12} sm={6} sx={{ textAlign: 'left' }}>
-                <Button variant="contained" color="error" type="submit" disabled={isDisabled}>
-                  Update
+              </Stack>
+              <Stack
+                direction="row"
+                textAlign="left"
+                spacing={2}
+                justifyContent={mdUp ? 'flex-start' : 'space-between'}
+              >
+                <Button
+                  variant="contained"
+                  color="error"
+                  type="submit"
+                  disabled={!isValid || isSubmitting || !isDirty}
+                >
+                  Cập nhật
                 </Button>
-              </Grid>
-              <Grid item xs={12} sm={6} sx={{ textAlign: 'right' }}>
                 <Button variant="contained" color="info" type="button" onClick={handleClose}>
-                  Cancle
+                  Trở lại
                 </Button>
-              </Grid>
-            </Grid>
-          </form>
+              </Stack>
+            </Stack>
+          </FormEdit>
         </Box>
       </Container>
     </Modal>
@@ -218,7 +264,8 @@ CategoryEdit.propTypes = {
   categoryId: PropTypes.string,
 };
 
-const validationForm = Yup.object({
-  name: Yup.string().required('Vui lòng nhập tên'),
-  description: Yup.string().required('Vui lòng nhập mô tả'),
-});
+const FormEdit = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
