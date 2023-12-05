@@ -29,4 +29,14 @@ export const userService = {
     const data = await callApi('v1/user/logout', methods.post, headers, null);
     return data;
   },
+  getUserById: async (p) => {
+    const headers = { 'Content-Type': 'application/json' };
+    const data = await callApi(`v1/user?id=${p.id}`, methods.get, headers, null);
+    return data;
+  },
+  getRoleById: async (p) => {
+    const headers = { 'Content-Type': 'application/json' };
+    const data = await callApi(`v1/role?id=${p.id}`, methods.get, headers, null);
+    return data;
+  },
 };

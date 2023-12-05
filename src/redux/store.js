@@ -3,12 +3,16 @@ import categorySliceReducer from './reducers/category-reducer';
 import productCategoriesReducer from './reducers/product-categories-reducer';
 import promotionReducer from './reducers/promotion-reducer';
 import productReducer from './reducers/product-reducer';
+import userReducer from './reducers/user-reducer';
+import roleReducer from './reducers/role-reducer';
 
 const rootReducer = combineReducers({
   category: categorySliceReducer,
   productCategories: productCategoriesReducer,
   promotions: promotionReducer,
   products: productReducer,
+  user: userReducer,
+  role: roleReducer,
 });
 
 const store = configureStore({

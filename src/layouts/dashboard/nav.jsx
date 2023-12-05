@@ -14,8 +14,6 @@ import { RouterLink } from 'src/routes/components';
 
 import { useResponsive } from 'src/hooks/use-responsive';
 
-import { account } from 'src/_mock/account';
-
 import Logo from 'src/components/logo';
 import Scrollbar from 'src/components/scrollbar';
 import { jwtConst } from 'src/resources/jwt-const';
@@ -24,11 +22,29 @@ import { storage } from 'src/utils/storage';
 
 import { NAV } from './config-layout';
 import navConfig from './config-navigation';
+import { useDispatch, useSelector } from 'react-redux';
+import { userActionThunk } from 'src/redux/actions/user-action';
+import { roleActionThunk } from 'src/redux/actions/role-action';
 
-// ----------------------------------------------------------------------
+const BACKEND_URI = import.meta.env.VITE_BACKEND_URL;
 
 export default function Nav({ openNav, onCloseNav }) {
   const pathname = usePathname();
+  const dispatch = useDispatch();
+  const userFilter = storage.getCache(jwtConst.user);
+  const { user } = useSelector((x) => x.rootReducer.user);
+  const { role } = useSelector((x) => x.rootReducer.role);
+
+  useEffect(() => {
+    dispatch(userActionThunk.getUserById({ id: userFilter?.id }));
+  }, []);
+
+  useEffect(() => {
+    if (!Array.isArray(user)) {
+      console.log(user.role_id);
+      dispatch(roleActionThunk.getRoleById({ id: user.role_id }));
+    }
+  }, [user]);
 
   const upLg = useResponsive('up', 'lg');
 
@@ -51,13 +67,13 @@ export default function Nav({ openNav, onCloseNav }) {
         bgcolor: (theme) => alpha(theme.palette.grey[500], 0.12),
       }}
     >
-      <Avatar src={account.photoURL} alt="photoURL" />
+      <Avatar src={user.avatar && `${BACKEND_URI}images/avatars/${user.avatar}`} alt="photoURL" />
 
       <Box sx={{ ml: 2 }}>
-        <Typography variant="subtitle2">{account.displayName}</Typography>
+        <Typography variant="subtitle2">{user.full_name}</Typography>
 
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {account.role}
+          {role?.name}
         </Typography>
       </Box>
     </Box>
@@ -82,7 +98,7 @@ export default function Nav({ openNav, onCloseNav }) {
         },
       }}
     >
-      <Logo sx={{ mt: 3, ml: 4 }} />
+      <Logo sx={{ width: '200px', margin: '0 auto' }} />
 
       {renderAccount}
 
@@ -141,7 +157,7 @@ function NavItem({ item }) {
 
   return (
     <div>
-      {item.title === 'logout' ? (
+      {item.path === '/logout' ? (
         <ListItemButtons
           item={item}
           sx={{

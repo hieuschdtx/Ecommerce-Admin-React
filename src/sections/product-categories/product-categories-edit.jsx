@@ -107,7 +107,7 @@ export default function ProductCategoriesEdit({ open, handleClose, proCategory }
 
   const handleSubmitForm = async (e) => {
     e.preventDefault();
-    console.log(values);
+
     const body = {
       name: values.name,
       description: values.description,

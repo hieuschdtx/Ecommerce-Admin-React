@@ -42,10 +42,7 @@ export default function LoginView() {
     },
     validationSchema: validationForm,
     onSubmit: async (values) => {
-      console.log(values);
-
       const { data, status } = await userService.LoginUser(values);
-      console.log(data, status);
       notify(data.message, status);
 
       if (data.success) {
