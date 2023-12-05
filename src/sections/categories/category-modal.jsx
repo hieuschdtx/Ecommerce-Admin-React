@@ -2,20 +2,30 @@ import {
   Box,
   Button,
   Container,
-  Grid,
   IconButton,
   Modal,
+  Stack,
   TextField,
   Typography,
+  createTheme,
 } from '@mui/material';
-import { useFormik } from 'formik';
 import PropTypes from 'prop-types';
 import Iconify from 'src/components/iconify';
 import * as Yup from 'yup';
-import { auth } from 'src/utils/auth';
 import { useEffect, useState } from 'react';
 import { notify } from 'src/utils/untils';
 import { CategoryService } from 'src/apis/category-service';
+import { Controller, useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { useSelector } from 'react-redux';
+import styled, { ThemeProvider } from 'styled-components';
+import { useResponsive } from 'src/hooks/use-responsive';
+import { primary } from 'src/theme/palette';
+import { BorderClearRounded } from '@mui/icons-material';
+
+const fontSize = {
+  fontSize: 13,
+};
 
 const style = {
   position: 'absolute',
@@ -29,31 +39,47 @@ const style = {
   width: '70%',
 };
 
-export default function CategoryModal({ open, handleClose }) {
-  const [fullName, setFullName] = useState(null);
+const defaultValues = {
+  name: '',
+  description: '',
+  created_by: '',
+};
 
-  const formik = useFormik({
-    initialValues: {
-      name: '',
-      description: '',
-      created_by: '',
-    },
-    validationSchema: validationForm,
-    onSubmit: async (values, { resetForm }) => {
-      handleClose();
-      values.created_by = fullName;
-      const { data, status } = await CategoryService.CreateCategory(values);
-      const { message } = data;
-      notify(message, status);
-      resetForm();
-    },
+const schema = Yup.object()
+  .shape({
+    name: Yup.string().required('Vui lòng nhập tên'),
+    description: Yup.string().required('Vui lòng nhập mô tả'),
+  })
+  .required();
+
+export default function CategoryModal({ open, handleClose }) {
+  const { user } = useSelector((x) => x.rootReducer.user);
+  const mdUp = useResponsive('up', 'md');
+  const {
+    handleSubmit,
+    setValue,
+    control,
+    formState: { errors, isValid, isSubmitting },
+    reset,
+  } = useForm({
+    mode: 'onBlur',
+    resolver: yupResolver(schema),
+    defaultValues,
   });
 
   useEffect(() => {
-    const userData = auth.GetUserInfo();
-    const { full_name } = userData;
-    setFullName(full_name);
-  }, [fullName]);
+    setValue('created_by', user.full_name);
+  }, []);
+
+  const onSubmitForm = async (value) => {
+    const {
+      data: { message },
+      status,
+    } = await CategoryService.CreateCategory(value);
+    notify(message, status);
+    reset({ ...defaultValues, created_by: user.full_name });
+    handleClose();
+  };
 
   return (
     <Modal
@@ -67,44 +93,63 @@ export default function CategoryModal({ open, handleClose }) {
           <Iconify icon="iconamoon:close" width={24} height={24} />
         </IconButton>
         <Typography id="modal-modal-title" variant="h6" component="h2" mb={2}>
-          Create new Category
+          Thêm mới danh mục
         </Typography>
         <Box>
-          <form onSubmit={formik.handleSubmit}>
-            <Grid direction="row" container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Name"
+          <FormAdd id="form" onSubmit={handleSubmit(onSubmitForm)}>
+            <Stack direction="column" spacing={2}>
+              <Stack direction={mdUp ? 'row' : 'column'} spacing={3} width={1}>
+                <Controller
                   name="name"
-                  fullWidth
-                  value={formik.values.name}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.name && !!formik.errors.name}
-                  helperText={formik.touched.name && formik.errors.name}
-                  required
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      variant="outlined"
+                      size="medium"
+                      required
+                      fullWidth
+                      label="Tên"
+                      name="name"
+                      error={!!errors.name}
+                      helperText={errors.name?.message}
+                      inputProps={{ sx: { fontSize } }}
+                      InputLabelProps={{ sx: fontSize }}
+                    />
+                  )}
                 />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Description"
+                <Controller
                   name="description"
-                  fullWidth
-                  value={formik.values.description}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.description && !!formik.errors.description}
-                  helperText={formik.touched.description && formik.errors.description}
-                  required
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      variant="outlined"
+                      size="medium"
+                      required
+                      fullWidth
+                      label="Mô tả"
+                      name="description"
+                      error={!!errors.description}
+                      helperText={errors.description?.message}
+                      inputProps={{ sx: fontSize }}
+                      InputLabelProps={{ sx: fontSize }}
+                    />
+                  )}
                 />
-              </Grid>
-              <Grid item xs={12}>
-                <Button variant="contained" color="primary" type="submit">
-                  Create
+              </Stack>
+              <Stack maxWidth={100}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  type="submit"
+                  disabled={!isValid || isSubmitting}
+                >
+                  Tạo mới
                 </Button>
-              </Grid>
-            </Grid>
-          </form>
+              </Stack>
+            </Stack>
+          </FormAdd>
         </Box>
       </Container>
     </Modal>
@@ -116,7 +161,8 @@ CategoryModal.propTypes = {
   handleClose: PropTypes.func,
 };
 
-const validationForm = Yup.object({
-  name: Yup.string().required('Vui lòng nhập tên'),
-  description: Yup.string().required('Vui lòng nhập mô tả'),
-});
+const FormAdd = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;

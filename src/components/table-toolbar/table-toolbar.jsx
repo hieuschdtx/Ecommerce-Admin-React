@@ -32,6 +32,8 @@ export default function TableToolBar({ numSelected, filterName, onFilterName, pl
           value={filterName}
           onChange={onFilterName}
           placeholder={placeHolder}
+          size="medium"
+          inputProps={{ style: { fontSize: 13 } }}
           startAdornment={
             <InputAdornment position="start">
               <Iconify
