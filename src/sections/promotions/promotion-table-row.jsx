@@ -5,6 +5,7 @@ import {
   Stack,
   TableCell,
   TableRow,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { useState } from 'react';
@@ -24,8 +25,6 @@ export default function PromotionTableRow({
   to_day,
   status,
   expiry,
-  selected,
-  handleClick,
   hanldeGetId,
 }) {
   const [open, setOpen] = useState(null);
@@ -68,9 +67,10 @@ export default function PromotionTableRow({
       variant="filled"
       color={secondary.dark}
       sx={{
-        fontSize: '12px',
+        fontSize: '11px',
         pl: 1.5,
         pr: 1.5,
+        width: 40,
       }}
     >
       {`${discount}%`}
@@ -82,9 +82,10 @@ export default function PromotionTableRow({
       variant="filled"
       color={expiry ? success.special : error.special}
       sx={{
-        fontSize: '12px',
+        fontSize: '11px',
         pl: 1.5,
         pr: 1.5,
+        width: 75,
       }}
     >
       {`${expiry ? 'Còn hạn' : 'Đã hết hạn'}`}
@@ -96,9 +97,10 @@ export default function PromotionTableRow({
       variant="filled"
       color={status ? success.special : error.special}
       sx={{
-        fontSize: '12px',
+        fontSize: '11px',
         pl: 1.5,
         pr: 1.5,
+        width: 90,
       }}
     >
       {`${status ? 'Đang sử dụng' : 'Đã khóa'}`}
@@ -115,12 +117,20 @@ export default function PromotionTableRow({
       {openModal && (
         <PromotionAdd open={openModal} isEdit id={id} setOpen={() => setOpenModal(false)} />
       )}
-      <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
+      <TableRow hover tabIndex={-1} role="checkbox">
         <TableCell component="th" scope="row" padding="normal">
-          <Stack direction="row" alignItems="center" spacing={2} width="150px">
-            <Typography variant="subtitle2" noWrap overflow="hidden" textOverflow="ellipsis">
-              {name}
-            </Typography>
+          <Stack direction="row" alignItems="center" spacing={2} width={250}>
+            <Tooltip title={name}>
+              <Typography
+                variant="normal"
+                fontSize={13}
+                noWrap
+                overflow="hidden"
+                textOverflow="ellipsis"
+              >
+                {name}
+              </Typography>
+            </Tooltip>
           </Stack>
         </TableCell>
 
@@ -130,9 +140,17 @@ export default function PromotionTableRow({
           </Stack>
         </TableCell>
 
-        <TableCell>{from_day}</TableCell>
+        <TableCell>
+          <Typography variant="normal" fontSize={13}>
+            {from_day}
+          </Typography>
+        </TableCell>
 
-        <TableCell>{to_day}</TableCell>
+        <TableCell>
+          <Typography variant="normal" fontSize={13}>
+            {to_day}
+          </Typography>
+        </TableCell>
 
         <TableCell component="th" scope="row" padding="none">
           <Stack direction="row" alignItems="center" justifyContent="center" spacing={2}>
@@ -165,7 +183,7 @@ export default function PromotionTableRow({
       >
         <MenuItem onClick={(event) => handleEditPromotion(event)}>
           <Iconify icon="eva:edit-fill" sx={{ mr: 2 }} />
-          Edit
+          Chỉnh sửa
         </MenuItem>
 
         <MenuItem
@@ -175,7 +193,7 @@ export default function PromotionTableRow({
           }}
         >
           <Iconify icon="eva:trash-2-outline" sx={{ mr: 2 }} />
-          Delete
+          Xóa
         </MenuItem>
       </Popover>
     </>
@@ -189,9 +207,5 @@ PromotionTableRow.propTypes = {
   to_day: PropTypes.any,
   status: PropTypes.bool,
   expiry: PropTypes.bool,
-  selected: PropTypes.any,
-  handleClick: PropTypes.func,
   hanldeGetId: PropTypes.func,
 };
-
-// onClick={(event) => handleEditModal(event)} onClick={(event) => {handleDeleteModal(event)}}

@@ -16,9 +16,9 @@ export const promotionService = {
     const data = await callApi(`v1/promotion?id=${id}`, methods.delete, headers, null);
     return data;
   },
-  updatePromotion: async (id, body) => {
+  updatePromotion: async (p) => {
     const headers = { 'Content-Type': 'application/json' };
-    const data = await callApi(`v1/promotion/update?id=${id}`, methods.put, headers, body);
+    const data = await callApi(`v1/promotion/update?id=${p.id}`, methods.put, headers, p);
     return data;
   },
 };

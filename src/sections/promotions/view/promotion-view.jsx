@@ -54,15 +54,6 @@ export default function PromotionView() {
     setFilterName(event.target.value);
   };
 
-  const handleSelectAllClick = (event) => {
-    if (event.target.checked) {
-      const newSelecteds = promotion.map((n) => n.id);
-      setSelected(newSelecteds);
-      return;
-    }
-    setSelected([]);
-  };
-
   const handleChangeRowsPerPage = (event) => {
     setPage(0);
     setRowsPerPage(parseInt(event.target.value, 10));
@@ -87,36 +78,19 @@ export default function PromotionView() {
     setPage(newPage);
   };
 
-  const handleClick = (event, name) => {
-    const selectedIndex = selected.indexOf(name);
-    let newSelected = [];
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, name);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-    setSelected(newSelected);
-  };
-
   const dataFiltered = applyFilter({
     inputData: promotion,
     comparator: getComparator(order, orderBy),
     filterName,
   });
+
   const notFound = !dataFiltered.length && !!filterName;
 
   return (
     <>
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
-          <Typography variant="h4">Promotion</Typography>
+          <Typography variant="h4">Khuyến mãi</Typography>
 
           <Button
             variant="contained"
@@ -124,15 +98,14 @@ export default function PromotionView() {
             startIcon={<Iconify icon="eva:plus-fill" />}
             onClick={() => setOpen(true)}
           >
-            New Promotion
+            Thêm mới
           </Button>
         </Stack>
         <Card>
           <TableToolBar
-            numSelected={selected.length}
             filterName={filterName}
             onFilterName={handleFilterByName}
-            placeHolder="Search promotion..."
+            placeHolder="Tìm kiếm khuyến mãi..."
           />
           <Scrollbar>
             <TableContainer sx={{ overflow: 'unset' }}>
@@ -140,12 +113,9 @@ export default function PromotionView() {
                 <TableDataHead
                   order={order}
                   orderBy={orderBy}
-                  rowCount={promotion.length}
-                  numSelected={selected.length}
                   onRequestSort={handleSort}
-                  onSelectAllClick={handleSelectAllClick}
                   headLabel={[
-                    { id: 'name', label: 'Tên' },
+                    { id: 'name', label: 'Tên khuyến mãi' },
                     { id: 'discount', label: 'Phần trăm giảm', align: 'center' },
                     { id: 'from_day', label: 'Từ ngày' },
                     { id: 'to_day', label: 'Đến ngày' },
@@ -166,8 +136,6 @@ export default function PromotionView() {
                         to_day={fDateTime(row.to_day)}
                         status={row.status}
                         expiry={expiryPromotion(row.to_day)}
-                        selected={selected.indexOf(row.id) !== -1}
-                        handleClick={(event) => handleClick(event, row.id)}
                         hanldeGetId={(event) => hanldeGetId(event, row.id)}
                       />
                     ))}

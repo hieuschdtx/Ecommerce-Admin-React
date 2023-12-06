@@ -712,7 +712,7 @@ const ProductAdd = ({ isAdd }) => {
                     color="inherit"
                     sx={{ backgroundColor: 'black' }}
                     type="submit"
-                    disabled={isSubmitting || !isValid || (!isAdd && !isDirty)}
+                    disabled={isSubmitting || (!isValid && !isAdd && !isDirty)}
                   >
                     {isAdd ? 'Thêm mới' : 'Cập nhật'}
                   </Button>
