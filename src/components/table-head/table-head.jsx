@@ -2,14 +2,7 @@ import PropTypes from 'prop-types';
 import { Box, TableCell, TableHead, TableRow, TableSortLabel } from '@mui/material';
 import { visuallyHidden } from 'src/utils/untils';
 
-export default function TableDataHead({
-  order,
-  orderBy,
-  rowCount,
-  headLabel,
-  numSelected,
-  onRequestSort,
-}) {
+export default function TableDataHead({ order, orderBy, headLabel, onRequestSort }) {
   const onSort = (property) => (event) => {
     onRequestSort(event, property);
   };

@@ -32,7 +32,6 @@ export default function CategoriesView() {
   const [order, setOrder] = useState('asc');
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [orderBy, setOrderBy] = useState('name');
-  const [selected, setSelected] = useState([]);
   const [page, setPage] = useState(0);
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch();
@@ -77,38 +76,12 @@ export default function CategoriesView() {
     setPage(newPage);
   };
 
-  const handleSelectAllClick = (event) => {
-    if (event.target.checked) {
-      const newSelecteds = categories.map((n) => n.id);
-      setSelected(newSelecteds);
-      return;
-    }
-    setSelected([]);
-  };
-
-  const handleClick = (event, name) => {
-    const selectedIndex = selected.indexOf(name);
-    let newSelected = [];
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, name);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-    setSelected(newSelected);
-  };
-
   const dataFiltered = applyFilter({
     inputData: categories,
     comparator: getComparator(order, orderBy),
     filterName,
   });
+
   const notFound = !dataFiltered.length && !!filterName;
 
   return (
@@ -129,7 +102,6 @@ export default function CategoriesView() {
 
         <Card>
           <TableToolBar
-            numSelected={selected.length}
             filterName={filterName}
             onFilterName={handleFilterByName}
             placeHolder="Tìm kiếm danh mục..."
@@ -141,10 +113,7 @@ export default function CategoriesView() {
                 <TableDataHead
                   order={order}
                   orderBy={orderBy}
-                  rowCount={categories.length}
-                  numSelected={selected.length}
                   onRequestSort={handleSort}
-                  onSelectAllClick={handleSelectAllClick}
                   headLabel={[
                     { id: 'name', label: 'Tên' },
                     { id: 'description', label: 'Mô tả' },
@@ -163,8 +132,6 @@ export default function CategoriesView() {
                         description={row.description}
                         createdBy={row.created_by}
                         createdAt={fDateTime(row.created_at, null)}
-                        selected={selected.indexOf(row.id) !== -1}
-                        handleClick={(event) => handleClick(event, row.id)}
                         hanldeGetId={(event) => hanldeGetId(event, row.id)}
                       />
                     ))}
@@ -180,6 +147,7 @@ export default function CategoriesView() {
             </TableContainer>
           </Scrollbar>
         </Card>
+
         <TablePagination
           page={page}
           component="div"

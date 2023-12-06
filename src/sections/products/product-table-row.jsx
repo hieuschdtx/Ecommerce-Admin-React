@@ -1,6 +1,5 @@
 import {
   Avatar,
-  Checkbox,
   IconButton,
   MenuItem,
   Popover,
@@ -12,7 +11,9 @@ import {
 import PropTypes from 'prop-types';
 import { useState } from 'react';
 import Iconify from 'src/components/iconify';
+import Label from 'src/components/label';
 import { useRouter } from 'src/routes/hooks';
+import { error, success } from 'src/theme/palette';
 
 export default function ProductTableRow({
   name,
@@ -21,8 +22,6 @@ export default function ProductTableRow({
   stock,
   status,
   product_category_id,
-  selected,
-  handleClick,
   hanldeGetId,
 }) {
   const [open, setOpen] = useState(null);
@@ -42,12 +41,27 @@ export default function ProductTableRow({
     router.push(`${productId}/edit`);
   };
 
+  const renderDiscount = (
+    <Label
+      variant="filled"
+      color={status ? success.special : error.special}
+      sx={{
+        fontSize: '11px',
+        pl: 1.5,
+        pr: 1.5,
+        width: 70,
+      }}
+    >
+      {status ? 'Hiển thị' : 'Đã khóa'}
+    </Label>
+  );
+
   return (
     <>
-      <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
+      <TableRow hover tabIndex={-1} role="checkbox">
         <TableCell component="th" scope="row" padding="normal">
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="subtitle2" noWrap>
+            <Typography variant="normal" fontSize={13} noWrap>
               {name}
             </Typography>
           </Stack>
@@ -65,8 +79,8 @@ export default function ProductTableRow({
         <TableCell component="th" scope="row" padding="none">
           <Stack direction="row" alignItems="center" spacing={2} width="150px">
             <Typography
-              variant="subtitle2"
-              fontWeight="normal"
+              variant="normal"
+              fontSize={13}
               noWrap
               overflow="hidden"
               textOverflow="ellipsis"
@@ -78,17 +92,23 @@ export default function ProductTableRow({
 
         <TableCell>
           <Stack direction="row" alignItems="center" spacing={2} justifyContent="center">
-            {stock}
+            <Typography variant="normal" fontSize={13}>
+              {stock}
+            </Typography>
           </Stack>
         </TableCell>
 
         <TableCell>
           <Stack direction="row" alignItems="center" spacing={2} justifyContent="center">
-            <Checkbox disableRipple checked={status} />
+            {renderDiscount}
           </Stack>
         </TableCell>
 
-        <TableCell>{product_category_id}</TableCell>
+        <TableCell>
+          <Typography variant="normal" fontSize={13}>
+            {product_category_id}
+          </Typography>
+        </TableCell>
 
         <TableCell align="right">
           <IconButton onClick={handleOpenMenu}>
@@ -109,12 +129,12 @@ export default function ProductTableRow({
       >
         <MenuItem onClick={(event) => handleProduct(event)}>
           <Iconify icon="eva:edit-fill" sx={{ mr: 2 }} />
-          Edit
+          chỉnh sửa
         </MenuItem>
 
         <MenuItem sx={{ color: 'error.main' }}>
           <Iconify icon="eva:trash-2-outline" sx={{ mr: 2 }} />
-          Delete
+          Xóa
         </MenuItem>
       </Popover>
     </>
@@ -128,7 +148,6 @@ ProductTableRow.propTypes = {
   stock: PropTypes.number,
   status: PropTypes.bool,
   product_category_id: PropTypes.string,
-  selected: PropTypes.any,
   handleClick: PropTypes.func,
   hanldeGetId: PropTypes.func,
 };

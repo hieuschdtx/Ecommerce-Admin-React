@@ -32,7 +32,6 @@ export default function ProductCategoriesView() {
   const [order, setOrder] = useState('asc');
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [orderBy, setOrderBy] = useState('name');
-  const [selected, setSelected] = useState([]);
   const [page, setPage] = useState(0);
   const [open, setOpen] = useState(false);
   const [proCategories, setProCategories] = useState([]);
@@ -61,27 +60,23 @@ export default function ProductCategoriesView() {
   }, [dispatch]);
 
   useEffect(() => {
-    try {
-      const mapCategory = {};
-      const mapPromotion = {};
+    const mapCategory = {};
+    const mapPromotion = {};
 
-      categories.forEach((item) => {
-        mapCategory[item.id] = item.name;
-      });
-      promotion.forEach((item) => {
-        mapPromotion[item.id] = item.discount;
-      });
+    categories.forEach((item) => {
+      mapCategory[item.id] = item.name;
+    });
+    promotion.forEach((item) => {
+      mapPromotion[item.id] = item.discount;
+    });
 
-      const newproductCategories = productCategories.map((item) => ({
-        ...item,
-        category_name: mapCategory[item.category_id],
-        promotion_discount: mapPromotion[item.promotion_id],
-      }));
+    const newproductCategories = productCategories.map((item) => ({
+      ...item,
+      category_name: mapCategory[item.category_id],
+      promotion_discount: mapPromotion[item.promotion_id],
+    }));
 
-      setProCategories(newproductCategories);
-    } catch (error) {
-      console.log(error);
-    }
+    setProCategories(newproductCategories);
   }, [categories, productCategories, promotion]);
 
   const handleFilterByName = (event) => {
@@ -111,36 +106,18 @@ export default function ProductCategoriesView() {
     setPage(newPage);
   };
 
-  const handleClick = (event, name) => {
-    const selectedIndex = selected.indexOf(name);
-    let newSelected = [];
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, name);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-    setSelected(newSelected);
-  };
-
   const dataFiltered = applyFilter({
     inputData: proCategories,
     comparator: getComparator(order, orderBy),
     filterName,
   });
   const notFound = !dataFiltered.length && !!filterName;
+
   return (
     <>
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4">Danh mục sản phẩm</Typography>
-
           <Button
             variant="contained"
             color="inherit"
@@ -150,23 +127,18 @@ export default function ProductCategoriesView() {
             Thêm mới
           </Button>
         </Stack>
-
         <Card>
           <TableToolBar
-            numSelected={selected.length}
             filterName={filterName}
             onFilterName={handleFilterByName}
             placeHolder="Tìm kiếm danh mục sản phẩm..."
           />
-
           <Scrollbar>
             <TableContainer sx={{ overflow: 'unset' }}>
               <Table sx={{ minWidth: 800 }}>
                 <TableDataHead
                   order={order}
                   orderBy={orderBy}
-                  rowCount={proCategories.length}
-                  numSelected={selected.length}
                   onRequestSort={handleSort}
                   headLabel={[
                     { id: 'name', label: 'Tên danh mục sản phẩm', tooltip: '' },
@@ -193,17 +165,13 @@ export default function ProductCategoriesView() {
                         discount={row.promotion_discount}
                         createdBy={row.created_by}
                         createdAt={fDateTime(row.created_at, null)}
-                        selected={selected.indexOf(row.id) !== -1}
-                        handleClick={(event) => handleClick(event, row.id)}
                         hanldeGetId={(event) => hanldeGetId(event, row.id)}
                       />
                     ))}
-
                   <TableEmptyRow
                     height={77}
                     emptyRows={emptyRows(page, rowsPerPage, proCategories.length)}
                   />
-
                   {notFound && <TableNoData query={filterName} />}
                 </TableBody>
               </Table>

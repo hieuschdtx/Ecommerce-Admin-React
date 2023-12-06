@@ -18,13 +18,11 @@ import { secondary } from 'src/theme/palette';
 import ProductCategoriesEdit from './product-categories-edit';
 
 export default function ProductCategoriesTableRow({
-  selected,
   name,
   category,
   discount,
   createdBy,
   createdAt,
-  handleClick,
   hanldeGetId,
 }) {
   const [open, setOpen] = useState(null);
@@ -95,7 +93,7 @@ export default function ProductCategoriesTableRow({
           proCategory={id}
         />
       )}
-      <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
+      <TableRow hover tabIndex={-1} role="checkbox">
         <TableCell component="th" scope="row" padding="normal">
           <Stack direction="row" alignItems="center" spacing={2}>
             <Typography variant="normal" fontSize={13} noWrap>
@@ -112,7 +110,7 @@ export default function ProductCategoriesTableRow({
 
         <TableCell component="th" scope="row" padding="none">
           <Stack direction="row" alignItems="center" justifyContent="center" spacing={2}>
-            {renderDiscount}
+            {discount !== undefined && renderDiscount}
           </Stack>
         </TableCell>
 
@@ -169,7 +167,6 @@ ProductCategoriesTableRow.propTypes = {
   name: PropTypes.any,
   discount: PropTypes.any,
   category: PropTypes.any,
-  selected: PropTypes.any,
   createdAt: PropTypes.string,
   hanldeGetId: PropTypes.func,
 };
