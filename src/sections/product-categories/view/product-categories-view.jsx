@@ -111,15 +111,6 @@ export default function ProductCategoriesView() {
     setPage(newPage);
   };
 
-  const handleSelectAllClick = (event) => {
-    if (event.target.checked) {
-      const newSelecteds = proCategories.map((n) => n.id);
-      setSelected(newSelecteds);
-      return;
-    }
-    setSelected([]);
-  };
-
   const handleClick = (event, name) => {
     const selectedIndex = selected.indexOf(name);
     let newSelected = [];
@@ -148,7 +139,7 @@ export default function ProductCategoriesView() {
     <>
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
-          <Typography variant="h4">Product categories</Typography>
+          <Typography variant="h4">Danh mục sản phẩm</Typography>
 
           <Button
             variant="contained"
@@ -156,7 +147,7 @@ export default function ProductCategoriesView() {
             startIcon={<Iconify icon="eva:plus-fill" />}
             onClick={() => setOpen(true)}
           >
-            New Product category
+            Thêm mới
           </Button>
         </Stack>
 
@@ -165,7 +156,7 @@ export default function ProductCategoriesView() {
             numSelected={selected.length}
             filterName={filterName}
             onFilterName={handleFilterByName}
-            placeHolder="Search product category..."
+            placeHolder="Tìm kiếm danh mục sản phẩm..."
           />
 
           <Scrollbar>
@@ -177,18 +168,17 @@ export default function ProductCategoriesView() {
                   rowCount={proCategories.length}
                   numSelected={selected.length}
                   onRequestSort={handleSort}
-                  onSelectAllClick={handleSelectAllClick}
                   headLabel={[
-                    { id: 'name', label: 'Tên', tooltip: '' },
-                    { id: 'category', label: 'Category', tooltip: 'Danh mục hiển thị' },
+                    { id: 'name', label: 'Tên danh mục sản phẩm', tooltip: '' },
+                    { id: 'category', label: 'Danh mục', tooltip: '' },
                     {
                       id: 'discount',
-                      label: 'Discount',
+                      label: 'Mức giảm giá',
                       align: 'center',
                       tooltip: 'Giảm giá danh mục',
                     },
-                    { id: 'createdBy', label: 'Created by' },
-                    { id: 'createdAt', label: 'Created at' },
+                    { id: 'createdBy', label: 'Người tạo' },
+                    { id: 'createdAt', label: 'Ngày tạo' },
                     { id: '' },
                   ]}
                 />

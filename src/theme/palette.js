@@ -25,6 +25,7 @@ export const primary = {
   darker: '#042174',
   contrastText: '#FFFFFF',
   main: '#212b36',
+  primary: '#e4222e', //red
 };
 
 export const secondary = {

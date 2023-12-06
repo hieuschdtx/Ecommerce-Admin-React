@@ -1,30 +1,37 @@
 import {
   Box,
-  Button,
   Container,
   FormControl,
   FormHelperText,
-  Grid,
   IconButton,
   InputLabel,
   MenuItem,
   Modal,
   Paper,
   Select,
+  Stack,
   TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useFormik } from 'formik';
 import PropTypes from 'prop-types';
 import Iconify from 'src/components/iconify';
 import * as Yup from 'yup';
-import { auth } from 'src/utils/auth';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { fDateTime } from 'src/utils/format-time';
 import { productCategoriesService } from 'src/apis/product-categories-service';
 import { notify } from 'src/utils/untils';
+import { Controller, useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import styled from 'styled-components';
+import { useResponsive } from 'src/hooks/use-responsive';
+import { CustomButton } from 'src/theme/styled';
+import { info, primary } from 'src/theme/palette';
+
+const fontSize = {
+  fontSize: 13,
+};
 
 const style = {
   position: 'absolute',
@@ -35,7 +42,7 @@ const style = {
   border: 'none',
   borderRadius: '24px',
   p: 3,
-  width: '45%',
+  width: '50%',
   overflowY: 'scroll hidden',
   height: '60vh',
   outline: 'none',
@@ -49,43 +56,43 @@ const stylePaper = {
   right: 0,
   bottom: 0,
   borderRadius: '16px',
+  width: 1,
 };
 
 const defaultValues = {
-  id: '',
   name: '',
   description: '',
-  created_by: '',
-  created_at: new Date(),
-  modified_by: '',
-  modified_at: new Date(),
   category_id: '',
   promotion_id: '',
 };
 
-const validationForm = Yup.object({
-  id: Yup.string().required(''),
-  created_by: Yup.string().required(''),
-  created_at: Yup.string().required(''),
-  modified_by: Yup.string().required(''),
-  modified_at: Yup.string().required(''),
-  name: Yup.string().required('Vui lòng nhập tên'),
-  description: Yup.string().required('Vui lòng nhập mô tả'),
-  category_id: Yup.string().required('Vui lòng chọn giá trị'),
-  promotion_id: Yup.string().required('Vui lòng chọn giá trị'),
-});
+const schema = Yup.object()
+  .shape({
+    name: Yup.string().required('Vui lòng nhập tên'),
+    description: Yup.string().required('Vui lòng nhập mô tả'),
+    category_id: Yup.string().required('Vui lòng chọn giá trị'),
+    promotion_id: Yup.string().required('Vui lòng chọn giá trị'),
+  })
+  .required();
 
 export default function ProductCategoriesEdit({ open, handleClose, proCategory }) {
-  const [fullName, setFullName] = useState(null);
   const { promotion } = useSelector((state) => state.rootReducer.promotions);
   const { categories } = useSelector((state) => state.rootReducer.category);
   const { productCategories } = useSelector((state) => state.rootReducer.productCategories);
+  const { user } = useSelector((x) => x.rootReducer.user);
+  const mdUp = useResponsive('up', 'md');
 
-  const { values, dirty, resetForm, handleChange, handleBlur, errors, isSubmitting, touched } =
-    useFormik({
-      initialValues: defaultValues,
-      validationSchema: validationForm,
-    });
+  const {
+    handleSubmit,
+    reset,
+    control,
+    watch,
+    formState: { errors, isDirty, isSubmitting, isValid },
+  } = useForm({
+    mode: 'onBlur',
+    resolver: yupResolver(schema),
+    defaultValues,
+  });
 
   const filterProductCategory = useMemo(
     () => productCategories?.find((item) => item.id === proCategory),
@@ -95,30 +102,21 @@ export default function ProductCategoriesEdit({ open, handleClose, proCategory }
   useEffect(() => {
     if (filterProductCategory) {
       const val = { ...defaultValues, ...filterProductCategory };
-      resetForm({ values: val, dirty: false });
+      console.log(val);
+      reset(val);
     }
   }, [filterProductCategory]);
 
-  useEffect(() => {
-    const userData = auth.GetUserInfo();
-    const { full_name } = userData;
-    setFullName(full_name);
-  }, [fullName]);
-
-  const handleSubmitForm = async (e) => {
-    e.preventDefault();
-
-    const body = {
-      name: values.name,
-      description: values.description,
-      modified_by: fullName,
-      promotion_id: values.promotion_id,
-      category_id: values.category_id,
-    };
-    const { data, status } = await productCategoriesService.updateProductCategory(values.id, body);
-    const { message } = data;
+  const handleSubmitForm = async (value) => {
+    const {
+      data: { message },
+      status,
+    } = await productCategoriesService.updateProductCategory({
+      ...value,
+      modified_by: user.full_name,
+    });
     notify(message, status);
-    resetForm();
+    reset(defaultValues);
     handleClose();
   };
 
@@ -136,176 +134,220 @@ export default function ProductCategoriesEdit({ open, handleClose, proCategory }
             <Iconify icon="iconamoon:close" width={24} height={24} />
           </IconButton>
           <Typography id="modal-modal-title" variant="h6" component="h2" mb={2}>
-            Edit Product category
+            Chỉnh sửa danh mục sản phẩm
           </Typography>
           <Box>
-            <form id="form" onSubmit={(e) => handleSubmitForm(e)}>
-              <Grid direction="row" container spacing={2}>
-                <Grid item xs={12} sm={7}>
-                  <TextField
-                    label="Id"
+            <FormEdit id="form" onSubmit={handleSubmit(handleSubmitForm)}>
+              <Stack direction="column" spacing={3} width={1}>
+                <Stack direction={mdUp ? 'row' : 'column'} spacing={2}>
+                  <Controller
                     name="id"
-                    fullWidth
-                    disabled
-                    value={values.id}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={touched.id && !!errors.id}
-                    helperText={touched.id && errors.id}
-                    required
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Id"
+                        name="id"
+                        fullWidth
+                        disabled
+                        inputProps={{ sx: { fontSize } }}
+                        InputLabelProps={{ sx: fontSize }}
+                      />
+                    )}
                   />
-                </Grid>
-                <Grid item xs={12} sm={5}>
-                  <TextField
-                    label="Name"
+                  <Controller
                     name="name"
-                    fullWidth
-                    value={values.name}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={touched.name && !!errors.name}
-                    helperText={touched.name && errors.name}
-                    required
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Tên danh mục sản phẩm"
+                        name="name"
+                        fullWidth
+                        required
+                        error={!!errors.name}
+                        helperText={errors.name?.message}
+                        inputProps={{ sx: { fontSize } }}
+                        InputLabelProps={{ sx: fontSize }}
+                      />
+                    )}
                   />
-                </Grid>
-                <Grid item xs={12} sm={12}>
-                  <TextField
-                    label="Description"
+                </Stack>
+                <Stack direction={mdUp ? 'row' : 'column'}>
+                  <Controller
                     name="description"
-                    multiline
-                    rows={8}
-                    fullWidth
-                    value={values.description}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={touched.description && !!errors.description}
-                    helperText={touched.description && errors.description}
-                    required
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Mô tả"
+                        name="description"
+                        multiline
+                        minRows={3}
+                        fullWidth
+                        required
+                        error={!!errors.description}
+                        helperText={errors.description?.message}
+                        inputProps={{ sx: { fontSize } }}
+                        InputLabelProps={{ sx: fontSize }}
+                      />
+                    )}
                   />
-                </Grid>
-                <Grid item xs={12} sm={6}>
+                </Stack>
+                <Stack direction={mdUp ? 'row' : 'column'} spacing={2}>
                   <FormControl fullWidth>
-                    <InputLabel id="role-select-label">Category</InputLabel>
-                    <Tooltip title="Chọn danh mục hiển thị">
-                      <Select
-                        labelId="role-select-label"
-                        name="category_id"
-                        id="category-select"
-                        value={values.category_id}
-                        label="Category"
-                        onChange={handleChange}
-                        error={touched.category_id && !!errors.category_id}
-                      >
-                        {categories.map((item, index) => (
-                          <MenuItem key={`${item}-${index}`} value={item.id}>
-                            {item.name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </Tooltip>
-                    {touched.category_id && errors.category_id && (
-                      <FormHelperText error>{errors.category_id}</FormHelperText>
+                    <InputLabel sx={fontSize} id="category_select">
+                      Danh mục
+                    </InputLabel>
+                    <Controller
+                      name="category_id"
+                      control={control}
+                      render={({ field }) => (
+                        <Tooltip title="Chọn danh mục hiển thị">
+                          <Select
+                            {...field}
+                            labelId="category_select"
+                            name="category_id"
+                            id="category-select"
+                            label="Danh mục"
+                            error={!!errors.category_id}
+                            sx={fontSize}
+                          >
+                            {categories.map((item, index) => (
+                              <MenuItem sx={fontSize} key={`${item}-${index}`} value={item.id}>
+                                {item.name}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </Tooltip>
+                      )}
+                    />
+                    {!!errors.category_id && (
+                      <FormHelperText sx={fontSize} error>
+                        {errors.category_id?.message}
+                      </FormHelperText>
                     )}
                   </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6}>
+
                   <FormControl fullWidth>
-                    <InputLabel id="role-select-label">Promotion</InputLabel>
-                    <Tooltip title="Chọn phầm trăm giảm giá">
-                      <Select
-                        labelId="role-select-label"
-                        name="promotion_id"
-                        id="promotion-select"
-                        value={values.promotion_id}
-                        label="Promotion"
-                        onChange={handleChange}
-                        error={touched.promotion_id && !!errors.promotion_id}
-                      >
-                        {promotion.map((item, index) => (
-                          <MenuItem key={`${item}-${index}`} value={item.id}>
-                            {item.discount}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </Tooltip>
-                    {touched.promotion_id && errors.promotion_id && (
-                      <FormHelperText error>{errors.promotion_id}</FormHelperText>
+                    <InputLabel sx={fontSize} id="promotion_select">
+                      Khuyến mãi
+                    </InputLabel>
+                    <Controller
+                      name="promotion_id"
+                      control={control}
+                      render={({ field }) => (
+                        <Tooltip title="Chọn phầm trăm giảm giá">
+                          <Select
+                            {...field}
+                            labelId="promotion_select"
+                            name="promotion_id"
+                            id="promotion-select"
+                            label="Khuyến mãi"
+                            error={!!errors.promotion_id}
+                            sx={fontSize}
+                          >
+                            {promotion.map((item, index) => (
+                              <MenuItem sx={fontSize} key={`${item}-${index}`} value={item.id}>
+                                {item.discount}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </Tooltip>
+                      )}
+                    />
+                    {!!errors.promotion_id && (
+                      <FormHelperText sx={fontSize} error>
+                        {errors.promotion_id?.message}
+                      </FormHelperText>
                     )}
                   </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Created by"
+                </Stack>
+                <Stack direction={mdUp ? 'row' : 'column'} spacing={2}>
+                  <Controller
                     name="created_by"
-                    fullWidth
-                    disabled
-                    value={values.created_by}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={touched.created_by && !!errors.created_by}
-                    helperText={touched.created_by && errors.created_by}
-                    required
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Người tạo"
+                        name="created_by"
+                        fullWidth
+                        disabled
+                        inputProps={{ sx: { fontSize } }}
+                        InputLabelProps={{ sx: fontSize }}
+                      />
+                    )}
                   />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Created at"
+                  <Controller
                     name="created_at"
-                    fullWidth
-                    disabled
-                    value={fDateTime(values.created_at)}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={touched.created_at && !!errors.created_at}
-                    helperText={touched.created_at && errors.created_at}
-                    required
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        name="created_at"
+                        value={fDateTime(watch('created_at'))}
+                        label="Ngày tạo"
+                        fullWidth
+                        disabled
+                        inputProps={{ sx: { fontSize } }}
+                        InputLabelProps={{ sx: fontSize }}
+                      />
+                    )}
                   />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Modified by"
+                </Stack>
+                <Stack direction={mdUp ? 'row' : 'column'} spacing={2}>
+                  <Controller
                     name="modified_by"
-                    fullWidth
-                    disabled
-                    value={values.modified_by || 'null'}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={touched.modified_by && !!errors.modified_by}
-                    helperText={touched.modified_by && errors.modified_by}
-                    required
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        name="modified_by"
+                        label="Người chỉnh sửa"
+                        fullWidth
+                        disabled
+                        inputProps={{ sx: { fontSize } }}
+                        InputLabelProps={{ sx: fontSize }}
+                      />
+                    )}
                   />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Modified at"
+                  <Controller
                     name="modified_at"
-                    fullWidth
-                    disabled
-                    value={fDateTime(values.modified_at) || 'null'}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={touched.modified_at && !!errors.modified_at}
-                    helperText={touched.modified_at && errors.modified_at}
-                    required
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        name="modified_at"
+                        label="Ngày chỉnh sửa"
+                        value={fDateTime(watch('modified_at')) || ''}
+                        fullWidth
+                        disabled
+                        inputProps={{ sx: { fontSize } }}
+                        InputLabelProps={{ sx: fontSize }}
+                      />
+                    )}
                   />
-                </Grid>
-                <Grid item xs={12} sm={6} textAlign="start">
-                  <Button
-                    variant="contained"
-                    color="error"
+                </Stack>
+                <Stack
+                  direction="row"
+                  textAlign="left"
+                  spacing={2}
+                  justifyContent={mdUp ? 'flex-start' : 'space-between'}
+                >
+                  <CustomButton
                     type="submit"
-                    disabled={!dirty || isSubmitting}
+                    colors={primary.primary}
+                    disabled={!isValid || isSubmitting || !isDirty}
                   >
-                    Update
-                  </Button>
-                </Grid>
-                <Grid item xs={12} sm={6} textAlign="end">
-                  <Button variant="contained" color="info" type="button" onClick={handleClose}>
-                    Cancle
-                  </Button>
-                </Grid>
-              </Grid>
-            </form>
+                    Cập nhật
+                  </CustomButton>
+                  <CustomButton colors={info.main} type="button" onClick={handleClose}>
+                    Trở lại
+                  </CustomButton>
+                </Stack>
+              </Stack>
+            </FormEdit>
           </Box>
         </Paper>
       </Container>
@@ -318,3 +360,10 @@ ProductCategoriesEdit.propTypes = {
   handleClose: PropTypes.func,
   proCategory: PropTypes.string,
 };
+
+const FormEdit = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+`;

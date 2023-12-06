@@ -22,6 +22,7 @@ import styled, { ThemeProvider } from 'styled-components';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { primary } from 'src/theme/palette';
 import { BorderClearRounded } from '@mui/icons-material';
+import { CustomButton } from 'src/theme/styled';
 
 const fontSize = {
   fontSize: 13,
@@ -36,7 +37,7 @@ const style = {
   border: 'none',
   borderRadius: '16px',
   p: 3,
-  width: '70%',
+  width: '50%',
 };
 
 const defaultValues = {
@@ -75,10 +76,9 @@ export default function CategoryModal({ open, handleClose }) {
     const {
       data: { message },
       status,
-    } = await CategoryService.CreateCategory(value);
+    } = await CategoryService.CreateCategory({ ...value, created_by: user.full_name });
     notify(message, status);
-    reset({ ...defaultValues, created_by: user.full_name });
-    handleClose();
+    reset(defaultValues);
   };
 
   return (
@@ -139,14 +139,14 @@ export default function CategoryModal({ open, handleClose }) {
                 />
               </Stack>
               <Stack maxWidth={100}>
-                <Button
+                <CustomButton
                   variant="contained"
-                  color="primary"
+                  colors={primary.primary}
                   type="submit"
                   disabled={!isValid || isSubmitting}
                 >
                   Tạo mới
-                </Button>
+                </CustomButton>
               </Stack>
             </Stack>
           </FormAdd>
