@@ -9,7 +9,6 @@ export default function TableDataHead({
   headLabel,
   numSelected,
   onRequestSort,
-  onSelectAllClick,
 }) {
   const onSort = (property) => (event) => {
     onRequestSort(event, property);

@@ -74,6 +74,7 @@ export default function ProductCategoriesTableRow({
         fontSize: '12px',
         pl: 1.5,
         pr: 1.5,
+        width: 45,
       }}
     >
       {`${discount}%`}
@@ -97,13 +98,17 @@ export default function ProductCategoriesTableRow({
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
         <TableCell component="th" scope="row" padding="normal">
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="subtitle2" noWrap>
+            <Typography variant="normal" fontSize={13} noWrap>
               {name}
             </Typography>
           </Stack>
         </TableCell>
 
-        <TableCell>{category}</TableCell>
+        <TableCell>
+          <Typography variant="normal" fontSize={13} noWrap>
+            {category}
+          </Typography>
+        </TableCell>
 
         <TableCell component="th" scope="row" padding="none">
           <Stack direction="row" alignItems="center" justifyContent="center" spacing={2}>
@@ -111,9 +116,17 @@ export default function ProductCategoriesTableRow({
           </Stack>
         </TableCell>
 
-        <TableCell>{createdBy}</TableCell>
+        <TableCell>
+          <Typography variant="normal" fontSize={13} noWrap>
+            {createdBy}
+          </Typography>
+        </TableCell>
 
-        <TableCell>{createdAt}</TableCell>
+        <TableCell>
+          <Typography variant="normal" fontSize={13} noWrap>
+            {createdAt}
+          </Typography>
+        </TableCell>
 
         <TableCell align="right">
           <IconButton onClick={handleOpenMenu}>
@@ -134,7 +147,7 @@ export default function ProductCategoriesTableRow({
       >
         <MenuItem onClick={(event) => handleEditModal(event)}>
           <Iconify icon="eva:edit-fill" sx={{ mr: 2 }} />
-          Edit
+          Chỉnh sửa
         </MenuItem>
 
         <MenuItem
@@ -144,7 +157,7 @@ export default function ProductCategoriesTableRow({
           sx={{ color: 'error.main' }}
         >
           <Iconify icon="eva:trash-2-outline" sx={{ mr: 2 }} />
-          Delete
+          Xóa
         </MenuItem>
       </Popover>
     </>

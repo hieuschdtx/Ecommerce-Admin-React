@@ -1,20 +1,25 @@
-import { Box, Button, Container, Grid, IconButton, Modal, Typography } from '@mui/material';
+import { Box, Button, Container, Grid, IconButton, Modal, Stack, Typography } from '@mui/material';
 import PropTypes from 'prop-types';
 import Iconify from '../iconify';
-
-const style = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  bgcolor: 'background.paper',
-  border: 'none',
-  borderRadius: '16px',
-  p: 3,
-  width: '25%',
-};
+import { CustomButton } from 'src/theme/styled';
+import { info, primary } from 'src/theme/palette';
+import { useResponsive } from 'src/hooks/use-responsive';
 
 export default function ModalDelete({ open, handleClose, handleAccept }) {
+  const mdUp = useResponsive('up', 'md');
+
+  const style = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    bgcolor: 'background.paper',
+    border: 'none',
+    borderRadius: '16px',
+    p: 3,
+    width: mdUp ? '30%' : '40%',
+  };
+
   const handleCloseModal = () => {
     handleClose();
   };
@@ -34,34 +39,31 @@ export default function ModalDelete({ open, handleClose, handleAccept }) {
         <IconButton onClick={handleCloseModal} sx={{ position: 'absolute', top: 4, right: 4 }}>
           <Iconify icon="iconamoon:close" width={24} height={24} />
         </IconButton>
-        <Typography id="modal-modal-title" variant="h6" component="h2" mb={2}>
+        <Typography variant="subtitle2" fontSize={18} mb={2}>
           Bạn chắc chắn muốn xóa?
         </Typography>
         <Box>
-          <Grid direction="row" container spacing={2}>
-            <Grid item xs={12} sm={6} sx={{ textAlign: 'center' }}>
-              <Button
+          <Stack direction="column" spacing={2}>
+            <Stack direction={mdUp ? 'row' : 'column'} spacing={2} justifyContent={'space-between'}>
+              <CustomButton
                 variant="contained"
-                color="error"
+                colors={primary.primary}
                 type="button"
-                sx={{ width: '100px' }}
+                padding="8px 32px"
                 onClick={handleAcceptModal}
               >
-                Ok
-              </Button>
-            </Grid>
-            <Grid item xs={12} sm={6} sx={{ textAlign: 'center' }}>
-              <Button
-                variant="contained"
-                color="info"
+                Đồng ý
+              </CustomButton>
+              <CustomButton
+                colors={info.main}
                 type="button"
-                sx={{ width: '100px' }}
+                padding="8px 32px"
                 onClick={handleCloseModal}
               >
-                Cancle
-              </Button>
-            </Grid>
-          </Grid>
+                Trở lại
+              </CustomButton>
+            </Stack>
+          </Stack>
         </Box>
       </Container>
     </Modal>

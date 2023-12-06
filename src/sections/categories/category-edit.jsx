@@ -21,6 +21,8 @@ import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useResponsive } from 'src/hooks/use-responsive';
 import styled from 'styled-components';
+import { info, primary } from 'src/theme/palette';
+import { CustomButton } from 'src/theme/styled';
 
 const fontSize = {
   fontSize: 13,
@@ -35,7 +37,7 @@ const style = {
   border: 'none',
   borderRadius: '16px',
   p: 3,
-  width: '70%',
+  width: '50%',
 };
 
 const defaultValues = {
@@ -236,17 +238,16 @@ const CategoryEdit = ({ open, handleClose, categoryId }) => {
                 spacing={2}
                 justifyContent={mdUp ? 'flex-start' : 'space-between'}
               >
-                <Button
-                  variant="contained"
-                  color="error"
+                <CustomButton
+                  colors={primary.primary}
                   type="submit"
                   disabled={!isValid || isSubmitting || !isDirty}
                 >
                   Cập nhật
-                </Button>
-                <Button variant="contained" color="info" type="button" onClick={handleClose}>
+                </CustomButton>
+                <CustomButton colors={info.main} type="button" onClick={handleClose}>
                   Trở lại
-                </Button>
+                </CustomButton>
               </Stack>
             </Stack>
           </FormEdit>
