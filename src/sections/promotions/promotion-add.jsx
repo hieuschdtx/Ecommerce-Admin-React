@@ -10,22 +10,31 @@ import {
   MenuItem,
   Modal,
   Select,
+  Stack,
   TextField,
   Typography,
+  styled,
 } from '@mui/material';
 import PropTypes from 'prop-types';
 import Iconify from 'src/components/iconify';
 import * as Yup from 'yup';
-import { useFormik } from 'formik';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import { promotionService } from 'src/apis/promotion-service';
 import { useEffect, useMemo } from 'react';
-import { auth } from 'src/utils/auth';
 import { notify } from 'src/utils/untils';
 import { useSelector } from 'react-redux';
 import parseISO from 'date-fns/parseISO';
+import { Controller, useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { useResponsive } from 'src/hooks/use-responsive';
+import { CustomButton } from 'src/theme/styled';
+import { info, primary } from 'src/theme/palette';
+
+const fontSize = {
+  fontSize: 13,
+};
 
 const style = {
   position: 'absolute',
@@ -58,6 +67,7 @@ const schema = Yup.object()
   .shape({
     name: Yup.string().required('Vui lòng nhập tên'),
     discount: Yup.number()
+      .typeError('Phần trăm phải là số')
       .required('Vui lòng nhập phần trăm giảm giá')
       .max(100, 'Không vượt quá 100%')
       .min(0, 'Phần trăm phải lớn hơn 0%'),
@@ -71,36 +81,40 @@ const schema = Yup.object()
 
 export default function PromotionAdd({ open, setOpen, isEdit, id = '' }) {
   const { promotion } = useSelector((state) => state.rootReducer.promotions);
+  const { user } = useSelector((x) => x.rootReducer.user);
+  const mdUp = useResponsive('up', 'md');
+
   const {
-    errors,
-    touched,
-    values,
-    handleBlur,
-    handleChange,
-    setFieldValue,
+    control,
     handleSubmit,
-    resetForm,
-    setValues,
-    dirty,
-    isSubmitting,
-  } = useFormik({
-    initialValues: defaultValues,
-    validationSchema: schema,
-    onSubmit: async (value) => {
-      handleClose();
-      const { data, status } = await handleSubmitForm(value);
-      notify(data.message, status);
-      resetForm();
-    },
+    setValue,
+    watch,
+    reset,
+    formState: { errors, isDirty, isValid, isSubmitting },
+  } = useForm({
+    mode: 'onChange',
+    defaultValues,
+    resolver: yupResolver(schema),
   });
 
-  const handleSubmitForm = async (value) => {
-    if (isEdit && id !== '') {
-      const data = await promotionService.updatePromotion(id, value);
-      return data;
+  const submitForm = async (value) => {
+    const {
+      data: { message },
+      status,
+    } = await handleSubmitForm({
+      ...value,
+      created_by: user.full_name,
+      modified_by: user.full_name,
+    });
+    notify(message, status);
+    reset(defaultValues);
+  };
+
+  const handleSubmitForm = async (param) => {
+    if (isEdit && id) {
+      return await promotionService.updatePromotion(param);
     }
-    const data = await promotionService.createPromotion(value);
-    return data;
+    return await promotionService.createPromotion(param);
   };
 
   const handleClose = () => {
@@ -119,18 +133,9 @@ export default function PromotionAdd({ open, setOpen, isEdit, id = '' }) {
   useEffect(() => {
     if (isEdit) {
       const val = { ...defaultValues, ...dataPromotion };
-      setValues(val);
+      reset(val);
     }
-  }, [isEdit, dataPromotion, setValues]);
-
-  useEffect(() => {
-    const userData = auth.GetUserInfo();
-    const { full_name } = userData;
-    setFieldValue('created_by', full_name);
-    if (isEdit) {
-      setFieldValue('modified_by', full_name);
-    }
-  }, [setFieldValue, isEdit]);
+  }, [isEdit, dataPromotion]);
 
   return (
     <Modal
@@ -148,131 +153,152 @@ export default function PromotionAdd({ open, setOpen, isEdit, id = '' }) {
         </Typography>
 
         <Box>
-          <form id="form" onSubmit={handleSubmit}>
-            <Grid direction="row" container spacing={2}>
-              {isEdit && (
-                <Grid item xs={12} sm={6}>
+          <form id="form" onSubmit={handleSubmit(submitForm)}>
+            <Stack direction="column" spacing={3}>
+              <Stack direction={mdUp ? 'row' : 'column'} spacing={2}>
+                {isEdit && (
                   <TextField
                     label="Id"
                     name="id"
                     fullWidth
-                    value={values?.id}
-                    onBlur={handleBlur}
-                    onChange={handleChange}
-                    error={touched?.id && !!errors?.id}
-                    helperText={touched?.id && errors?.id}
+                    value={watch('id')}
                     required
                     disabled
+                    inputProps={{ sx: fontSize }}
+                    InputLabelProps={{ sx: fontSize }}
                   />
-                </Grid>
-              )}
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Tên"
+                )}
+                <Controller
                   name="name"
-                  fullWidth
-                  value={values?.name}
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  error={touched?.name && !!errors?.name}
-                  helperText={touched?.name && errors?.name}
-                  required
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Tên khuyến mãi"
+                      name="name"
+                      fullWidth
+                      error={!!errors.name}
+                      helperText={errors.name?.message}
+                      required
+                      inputProps={{ sx: fontSize }}
+                      InputLabelProps={{ sx: fontSize }}
+                    />
+                  )}
                 />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Phần trăm giảm giá"
+              </Stack>
+
+              <Stack direction={mdUp ? 'row' : 'column'} spacing={2}>
+                <Controller
                   name="discount"
-                  fullWidth
-                  value={values?.discount}
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  error={touched?.discount && !!errors?.discount}
-                  helperText={touched?.discount && errors?.discount}
-                  required
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Phần trăm giảm giá"
+                      name="discount"
+                      type="number"
+                      fullWidth
+                      error={!!errors.discount}
+                      helperText={errors.discount?.message}
+                      required
+                      inputProps={{ sx: fontSize }}
+                      InputLabelProps={{ sx: fontSize }}
+                    />
+                  )}
                 />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DemoContainer components={['DatePicker']}>
-                    <DatePicker
-                      sx={{ width: '100%' }}
-                      label="Ngày bắt đầu"
-                      onChange={(date) => setFieldValue('from_day', date)}
-                      onBlur={handleBlur}
-                      value={values?.from_day}
-                      name="from_day"
-                      required
-                    />
-                  </DemoContainer>
-                  {touched?.from_day && !!errors?.from_day && (
-                    <FormHelperText error sx={{ margin: '3px 14px 0' }}>
-                      {errors?.from_day}
-                    </FormHelperText>
-                  )}
-                </LocalizationProvider>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DemoContainer components={['DatePicker']}>
-                    <DatePicker
-                      sx={{ width: '100%' }}
-                      label="Ngày kết thúc"
-                      onChange={(date) => setFieldValue('to_day', date)}
-                      onBlur={handleBlur}
-                      value={values?.to_day}
-                      name="to_day"
-                      required
-                    />
-                  </DemoContainer>
-                  {touched?.to_day && !!errors?.to_day && (
-                    <FormHelperText error sx={{ margin: '3px 14px 0' }}>
-                      {errors?.to_day}
-                    </FormHelperText>
-                  )}
-                </LocalizationProvider>
-              </Grid>
-              <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel id="role-select-label">Trạng thái</InputLabel>
-                  <Select
-                    labelId="role-select-label"
+                  <InputLabel sx={fontSize} id="discount-promotion">
+                    Trạng thái
+                  </InputLabel>
+                  <Controller
                     name="status"
-                    id="status-select"
-                    value={values?.status}
-                    label="Trạng thái"
-                    onChange={handleChange}
-                    error={touched?.status && !!errors?.status}
-                  >
-                    {defaultStatusValues.map((item, index) => (
-                      <MenuItem key={`${item}-${index}`} value={item.value}>
-                        {item.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {touched.status && !!errors.status && (
-                    <FormHelperText error>{errors.status}</FormHelperText>
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        labelId="discount-promotion"
+                        name="status"
+                        id="status-select"
+                        label="Trạng thái"
+                        error={!!errors.status}
+                        sx={fontSize}
+                      >
+                        {defaultStatusValues.map((item, index) => (
+                          <MenuItem sx={fontSize} key={`${item}-${index}`} value={item.value}>
+                            {item.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    )}
+                  />
+                  {!!errors.status && (
+                    <FormHelperText sx={fontSize} error>
+                      {errors.status?.message}
+                    </FormHelperText>
                   )}
                 </FormControl>
-              </Grid>
-              <Grid item xs={isEdit ? 6 : 12}>
-                <Button
-                  variant="contained"
-                  color={isEdit ? 'error' : 'primary'}
+              </Stack>
+              <Stack direction={mdUp ? 'row' : 'column'} spacing={2} justifyContent="space-between">
+                <Controller
+                  name="from_day"
+                  control={control}
+                  render={({ field }) => (
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <DemoContainer components={['DatePicker']} sx={{ flex: 1 }}>
+                        <StyledDatePicker
+                          {...field}
+                          sx={{ width: '100%' }}
+                          label="Ngày bắt đầu"
+                          name="from_day"
+                          required
+                        />
+                      </DemoContainer>
+                      {!!errors.from_day && (
+                        <FormHelperText error sx={fontSize}>
+                          {errors.from_day?.message}
+                        </FormHelperText>
+                      )}
+                    </LocalizationProvider>
+                  )}
+                />
+                <Controller
+                  name="to_day"
+                  control={control}
+                  render={({ field }) => (
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <DemoContainer components={['DatePicker']} sx={{ flex: 1 }}>
+                        <StyledDatePicker
+                          {...field}
+                          sx={{ width: '100%' }}
+                          label="Ngày kết thúc"
+                          name="to_day"
+                          required
+                        />
+                      </DemoContainer>
+                      {!!errors.to_day && (
+                        <FormHelperText error sx={{ margin: '3px 14px 0', fontSize }}>
+                          {errors.to_day?.message}
+                        </FormHelperText>
+                      )}
+                    </LocalizationProvider>
+                  )}
+                />
+              </Stack>
+              <Stack direction="row" spacing={2} justifyContent={mdUp ? 'start' : 'space-between'}>
+                <CustomButton
+                  colors={primary.primary}
                   type="submit"
-                  disabled={!dirty || isSubmitting}
+                  disabled={
+                    !isEdit ? isSubmitting || !isValid : (isEdit && !isDirty) || isSubmitting
+                  }
                 >
                   {isEdit ? 'Cập nhật' : 'Tạo mới'}
-                </Button>
-              </Grid>
-              {isEdit && (
-                <Grid item xs={isEdit && 6} textAlign="end">
-                  <Button variant="contained" color="info" type="button" onClick={handleClose}>
-                    Hủy bỏ
-                  </Button>
-                </Grid>
-              )}
-            </Grid>
+                </CustomButton>
+                <CustomButton colors={info.main} type="button" onClick={handleClose}>
+                  Hủy bỏ
+                </CustomButton>
+              </Stack>
+            </Stack>
           </form>
         </Box>
       </Container>
@@ -286,3 +312,12 @@ PromotionAdd.propTypes = {
   id: PropTypes.string,
   setOpen: PropTypes.func,
 };
+
+const StyledDatePicker = styled(DatePicker)(({ theme }) => ({
+  '& .MuiInputBase-root': {
+    fontSize: 13,
+  },
+  '& .MuiFormLabel-root': {
+    fontSize: 13,
+  },
+}));
