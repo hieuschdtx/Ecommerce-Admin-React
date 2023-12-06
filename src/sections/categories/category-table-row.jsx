@@ -16,12 +16,10 @@ import { notify } from 'src/utils/untils';
 import CategoryEdit from './category-edit';
 
 export default function CategoriesTableRow({
-  selected,
   name,
   description,
   createdBy,
   createdAt,
-  handleClick,
   hanldeGetId,
 }) {
   const [open, setOpen] = useState(null);
@@ -77,7 +75,7 @@ export default function CategoriesTableRow({
           categoryId={id}
         />
       )}
-      <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
+      <TableRow hover tabIndex={-1} role="checkbox">
         <TableCell component="th" scope="row" padding="normal">
           <Stack direction="row" alignItems="center" spacing={2}>
             <Typography variant="normal" fontSize={13} noWrap>
@@ -144,7 +142,6 @@ CategoriesTableRow.propTypes = {
   createdBy: PropTypes.any,
   name: PropTypes.any,
   description: PropTypes.any,
-  selected: PropTypes.any,
   createdAt: PropTypes.string,
   hanldeGetId: PropTypes.func,
 };

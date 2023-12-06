@@ -1,4 +1,5 @@
 import {
+  Avatar,
   Box,
   Button,
   Checkbox,
@@ -7,7 +8,6 @@ import {
   FormControlLabel,
   FormGroup,
   FormHelperText,
-  Grid,
   InputAdornment,
   InputLabel,
   MenuItem,
@@ -16,7 +16,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useFormik } from 'formik';
 import { memo, useEffect, useRef, useState } from 'react';
 import * as Yup from 'yup';
 import PropTypes from 'prop-types';
@@ -30,10 +29,13 @@ import { useRouter } from 'src/routes/hooks';
 import { NumericFormat } from 'react-number-format';
 import { productService } from 'src/apis/product-service';
 import { notify } from 'src/utils/untils';
-import { auth } from 'src/utils/auth';
 import { useParams } from 'react-router-dom';
 import { productCategoriesActionThunk } from 'src/redux/actions/product-categories-action';
 import { connection } from 'src/utils/signalR';
+import { useResponsive } from 'src/hooks/use-responsive';
+import { primary } from 'src/theme/palette';
+import { Controller, useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 
 const editorConfig = {
   enterMode: 'CKEditor5.EnterMode.PARAGRAPH',
@@ -41,10 +43,8 @@ const editorConfig = {
   placeholder: 'Nhập nội dung chi tiết về sản phẩm...',
 };
 
-const styleLabel = {
-  style: {
-    fontSize: '13px',
-  },
+const fontSize = {
+  fontSize: 13,
 };
 
 const filePath = `${import.meta.env.VITE_BACKEND_URL}images/products`;
@@ -67,15 +67,17 @@ const defaultValues = {
   storage: '',
 };
 
-const schema = Yup.object().shape({
-  name: Yup.string().required('Tên sản phẩm không được để trống'),
-  price: Yup.string().required('Vui lòng nhập giá sản phẩm').min(0, 'Giá không được bé hơn 0'),
-  weight: Yup.string()
-    .required('Vui lòng nhập khối lượng')
-    .min(0, 'Khối lượng không được bé hơn 0'),
-  stock: Yup.number().required('Vui lòng nhập số lượng').min(0, 'Số lượng không được bé hơn 0'),
-  product_category_id: Yup.string().required('Vui lòng chọn danh mục hiển thị'),
-});
+const schema = Yup.object()
+  .shape({
+    name: Yup.string().required('Tên sản phẩm không được để trống'),
+    price: Yup.string().required('Vui lòng nhập giá sản phẩm').min(0, 'Giá không được bé hơn 0'),
+    weight: Yup.string()
+      .required('Vui lòng nhập khối lượng')
+      .min(0, 'Khối lượng không được bé hơn 0'),
+    stock: Yup.string().required('Vui lòng nhập số lượng').min(0, 'Số lượng không được bé hơn 0'),
+    product_category_id: Yup.string().required('Vui lòng chọn danh mục hiển thị'),
+  })
+  .required();
 
 const ProductAdd = ({ isAdd }) => {
   const [selectedAvatar, setSelectedAvatar] = useState(null);
@@ -86,59 +88,82 @@ const ProductAdd = ({ isAdd }) => {
   const router = useRouter();
   const { id } = useParams();
   const editorRef = useRef(null);
+  const mdUp = useResponsive('up', 'md');
 
+  const { user } = useSelector((x) => x.rootReducer.user);
   const { productCategories } = useSelector((state) => state.rootReducer.productCategories);
-  const { products, productPrices, getPriceById, getProductById } = useSelector(
-    (x) => x.rootReducer.products
-  );
+  const { getPriceById, getProductById } = useSelector((x) => x.rootReducer.products);
 
   const fileInputAvatarRef = useRef(null);
   const fileInputThumbRef = useRef(null);
 
   const {
-    values,
-    setValues,
-    resetForm,
-    setFieldValue,
-    handleChange,
-    handleBlur,
-    errors,
-    touched,
     handleSubmit,
-    dirty,
-  } = useFormik({
-    initialValues: defaultValues,
-    validationSchema: schema,
-    onSubmit: async (value) => {
-      const formData = new FormData();
-      value.thumbnails_file.map((item) => formData.append('thumbnails_file', item));
-      Object.entries({
-        ...value,
-      }).forEach(([key, item]) => formData.append(key, item));
-      handleSubmitForm(formData);
+    control,
+    reset,
+    watch,
+    setValue,
+    formState: { errors, isDirty, isValid, isSubmitting },
+  } = useForm({
+    mode: 'onBlur',
+    resolver: yupResolver(schema),
+    defaultValues,
+  });
+
+  const submitForm = async (value) => {
+    const formData = new FormData();
+    value.thumbnails_file.map((item) => formData.append('thumbnails_file', item));
+    Object.entries({
+      ...value,
+      created_by: user.full_name,
+    }).forEach(([key, item]) => formData.append(key, item));
+    handleSubmitForm(formData);
+
+    if (!isAdd) {
       if (value.thumbnails_file.length > 0) {
-        handleEditImage(formData);
+        await productService.UpdateImageProduct(formData);
       }
       if (value.price !== getPriceById.price || value.weight !== getPriceById.weight) {
-        handleEditPrice(formData);
+        await productService.UpdatePriceProduct(formData);
       }
       if (deleteImage.length > 0) {
         deleteImage.map((item) => formData.append('files_name', item.file_name));
-        handleDeleteThumbs(formData);
+        await productService.DelteImageProduct(formData);
       }
-    },
-  });
+    }
+  };
+
+  const handleSubmitForm = async (param) => {
+    if (!isAdd) {
+      const {
+        data: { message },
+        status,
+      } = await productService.UpdateProduct(param);
+      notify(message, status);
+    } else {
+      const {
+        data: { message },
+        status,
+      } = await productService.CreateNewProduct(param);
+      notify(message, status);
+      reset(defaultValues);
+      if (editorRef && editorRef.current && editorRef.current.editor) {
+        editorRef.current.editor.setData('');
+      }
+
+      setSelectedAvatar(null);
+      setSelectedThumbnail([]);
+    }
+  };
 
   useEffect(() => {
     dispatch(productCategoriesActionThunk.getproductCategories());
-  }, [dispatch]);
-
-  useEffect(() => {
     if (!isAdd) {
       dispatch(productActionThunk.getProductById(id));
       dispatch(productActionThunk.getPriceByProductId(id));
     }
   }, [dispatch]);
+
   useEffect(() => {
     if (!isAdd) {
       connection.on('RELOAD_DATA_CHANGE', () => {
@@ -168,19 +193,13 @@ const ProductAdd = ({ isAdd }) => {
         ...getPriceById,
         ...getProductById,
       };
-      resetForm({ values: val, dirty: false });
+      reset(val);
     }
   }, [getPriceById, getProductById]);
 
-  useEffect(() => {
-    const userData = auth.GetUserInfo();
-    const { full_name } = userData;
-    setFieldValue('created_by', full_name);
-  }, []);
-
   const handleFileChanges = (event) => {
     const file = event.target.files[0];
-    setFieldValue('avatar_file', file);
+    setValue('avatar_file', file);
 
     if (file) {
       const reader = new FileReader();
@@ -212,7 +231,7 @@ const ProductAdd = ({ isAdd }) => {
             .then((response) => response.blob())
             .then((blob) => {
               const fileExtension = selectedThumbnail[index].split(';')[0].split('/')[1];
-              const fileName = `${values.name}-${Math.random()
+              const fileName = `${watch('name')}-${Math.random()
                 .toString(36)
                 .substring(2, 7)}-${Date.now()}.${fileExtension}`;
               return new File([blob], fileName, { type: blob.type });
@@ -222,250 +241,207 @@ const ProductAdd = ({ isAdd }) => {
       })
     ).then((uploadedFiles) => {
       const filteredFiles = uploadedFiles.filter((file) => file.length !== 0);
-      setFieldValue('thumbnails_file', filteredFiles);
+      setValue('thumbnails_file', filteredFiles);
     });
-  }, [selectedThumbnail, setFieldValue, values.name]);
+  }, [selectedThumbnail, watch('name')]);
 
   const handleDeleteImageUpload = (index) => {
+    console.log(index);
     const regex = /products(.*)/;
 
     const updatedSelectedThumbnails = selectedThumbnail.filter((item, i) => i !== index);
-    const thumbs = JSON.parse(values.thumnails);
-
-    const deleteFileThumbnail = selectedThumbnail[index];
-
-    const deletedFile = thumbs.find(
-      (img) => img.file_name === deleteFileThumbnail.match(regex)?.[1]
-    );
-    if (deletedFile) setdeleteImage((prev) => [...prev, deletedFile]);
-    setSelectedThumbnail(updatedSelectedThumbnails);
-  };
-
-  const handleCancelEdit = () => {
-    router.push('/products');
-  };
-
-  const handleSubmitForm = async (param) => {
     if (!isAdd) {
-      const { data, status } = await productService.UpdateProduct(param);
-      const { message } = data;
-      notify(message, status);
-    } else {
-      const { data, status } = await productService.CreateNewProduct(param);
-      const { message } = data;
-      notify(message, status);
-      resetForm();
-      if (editorRef && editorRef.current && editorRef.current.editor) {
-        editorRef.current.editor.setData('');
-      }
-      setSelectedAvatar(null);
-      setSelectedThumbnail([]);
+      const thumbs = JSON.parse(watch('thumnails'));
+      const deleteFileThumbnail = selectedThumbnail[index];
+
+      const deletedFile = thumbs.find(
+        (img) => img.file_name === deleteFileThumbnail.match(regex)?.[1]
+      );
+      if (deletedFile) setdeleteImage((prev) => [...prev, deletedFile]);
     }
-  };
-
-  const handleEditImage = async (param) => {
-    await productService.UpdateImageProduct(param);
-  };
-
-  const handleEditPrice = async (param) => {
-    await productService.UpdatePriceProduct(param);
-  };
-
-  const handleDeleteThumbs = async (param) => {
-    await productService.DelteImageProduct(param);
+    setSelectedThumbnail(updatedSelectedThumbnails);
   };
 
   return (
     <Container>
       <Typography variant="h4">{isAdd ? 'Thêm mới sản phẩm' : 'Chỉnh sửa sản phẩm'}</Typography>
-      <Grid
-        container
-        direction="row"
-        justifyContent="space-between"
-        spacing={1}
-        sx={{ padding: 6 }}
-      >
-        <Grid
-          item
-          xs={12}
-          md={3}
+      <Stack direction={mdUp ? 'row' : 'column'} justifyContent="space-between" spacing={3} mt={2}>
+        <Stack
           sx={{
             backgroundColor: 'white',
             borderRadius: '16px',
             padding: '16px',
-            border: '1px solid #f5f5f5',
+            border: '1px solid #d2d2d3',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: 1,
             maxHeight: '250px',
+            flex: 1,
           }}
         >
-          <Grid
-            item
-            xs={12}
-            display="flex"
-            alignItems="center"
-            flexDirection="column"
-            justifyContent="center"
+          <Box
+            sx={{
+              position: 'relative',
+              display: 'inline-block',
+              borderRadius: '50%',
+              width: 150,
+              height: 150,
+            }}
           >
-            <Box
+            <input
+              id="avatar_file"
+              name="avatar_file"
+              type="file"
+              ref={fileInputAvatarRef}
+              style={{ display: 'none' }}
+              onChange={handleFileChanges}
+            />
+
+            <Avatar
+              variant="circular"
+              src={selectedAvatar}
+              alt=""
               sx={{
-                position: 'relative',
-                display: 'inline-block',
-                borderRadius: '50%',
-                width: '150px',
-                height: '150px',
-                border: '1px solid #ccc',
+                width: 1,
+                height: 1,
+                objectFit: 'cover',
               }}
+            />
+            <Button
+              type="button"
+              variant="contained"
+              sx={{
+                position: 'absolute',
+                backgroundColor: selectedAvatar ? 'transparent' : primary.main,
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                borderRadius: '50%',
+                width: 1,
+                height: 1,
+                fontSize: 32,
+                '&:hover': {
+                  backgroundColor: selectedAvatar ? 'transparent' : primary.main,
+                },
+              }}
+              onClick={() => fileInputAvatarRef.current.click()}
             >
-              <input
-                id="avatar_file"
-                name="avatar_file"
-                type="file"
-                ref={fileInputAvatarRef}
-                style={{ display: 'none' }}
-                onChange={handleFileChanges}
-              />
-              <img
-                src={selectedAvatar}
-                alt=""
-                style={{
-                  borderRadius: '50%',
-                  width: '150px',
-                  height: '150px',
-                  objectFit: 'cover',
-                }}
-              />
-              <Button
-                type="button"
-                variant="contained"
-                sx={{
-                  position: 'absolute',
-                  backgroundColor: 'transparent',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  borderRadius: '50%',
-                  width: '150px',
-                  height: '150px',
-                  fontSize: 64,
-                  '&:hover': {
-                    backgroundColor: '#d3d4d5',
-                    opacity: 0.8,
-                  },
-                }}
-                onClick={() => fileInputAvatarRef.current.click()}
-              >
-                {selectedAvatar ? ' ' : <i className="bi bi-camera-fill" />}
-              </Button>
-            </Box>
-          </Grid>
+              {selectedAvatar ? ' ' : <i className="bi bi-camera-fill" />}
+            </Button>
+          </Box>
           <Typography sx={{ textAlign: 'center', fontSize: '12px' }}>
             Allowed *.jpeg, *.jpg, *.png, *.gif max size of 3.1 MB
           </Typography>
-        </Grid>
-        <Grid
-          container
-          item
-          direction="row"
-          xs={12}
-          md={8}
+        </Stack>
+        <Stack
           sx={{
             backgroundColor: 'white',
             borderRadius: '16px',
             padding: '16px',
-            border: '1px solid #f5f5f5',
+            border: '1px solid #d2d2d3',
+            flex: 2,
           }}
         >
-          <div style={{ width: '100%' }}>
-            <form id="form" onSubmit={handleSubmit}>
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <Typography variant="h6">Thông tin sản phẩm</Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    id="name"
-                    autoComplete="off"
-                    label="Tên sản phẩm"
+          <Box width={1}>
+            <form id="form" onSubmit={handleSubmit(submitForm)}>
+              <Stack spacing={3} direction="column">
+                <Stack>
+                  <Typography variant="body1" fontWeight={700} textAlign="left">
+                    Thông tin sản phẩm
+                  </Typography>
+                </Stack>
+                <Stack direction={mdUp ? 'row' : 'column'} spacing={2}>
+                  <Controller
                     name="name"
-                    fullWidth
-                    value={values.name}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={touched.name && !!errors.name}
-                    helperText={touched.name && errors.name}
-                    required
-                    InputLabelProps={styleLabel}
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Tên sản phẩm"
+                        name="name"
+                        fullWidth
+                        error={!!errors.name}
+                        helperText={errors.name?.message}
+                        required
+                        InputLabelProps={{ sx: fontSize }}
+                        inputProps={{ sx: fontSize }}
+                      />
+                    )}
                   />
-                </Grid>
-                <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
-                    <InputLabel id="productCategory-select-label" sx={{ fontSize: '12px' }}>
+                    <InputLabel id="productCategory-select-label" sx={fontSize}>
                       Danh mục sản phẩm
                     </InputLabel>
-                    <Select
-                      labelId="productCategory-select-label"
-                      label="Danh mục sản phẩm"
+                    <Controller
                       name="product_category_id"
-                      id="category-select"
-                      value={values.product_category_id}
-                      onChange={handleChange}
-                      error={touched.product_category_id && !!errors.product_category_id}
-                      required
-                    >
-                      {productCategories.map((item, index) => (
-                        <MenuItem key={`${item}-${index}`} value={item.id}>
-                          {item.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    {touched.product_category_id && errors.product_category_id && (
-                      <FormHelperText error>{errors.product_category_id}</FormHelperText>
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          {...field}
+                          labelId="productCategory-select-label"
+                          label="Danh mục sản phẩm"
+                          name="product_category_id"
+                          id="category-select"
+                          error={!!errors.product_category_id}
+                          required
+                          sx={fontSize}
+                        >
+                          {productCategories.map((item, index) => (
+                            <MenuItem sx={fontSize} key={`${item}-${index}`} value={item.id}>
+                              {item.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      )}
+                    />
+                    {!!errors.product_category_id && (
+                      <FormHelperText sx={fontSize} error>
+                        {errors.product_category_id?.message}
+                      </FormHelperText>
                     )}
                   </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={12}>
-                  <TextField
-                    label="Mô tả"
+                </Stack>
+                <Stack>
+                  <Controller
                     name="description"
-                    multiline
-                    placeholder="Thông tin mô tả sản phẩm..."
-                    rows={5}
-                    fullWidth
-                    value={values.description}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={touched.description && !!errors.description}
-                    helperText={touched.description && errors.description}
-                    InputLabelProps={styleLabel}
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Mô tả"
+                        name="description"
+                        multiline
+                        placeholder="Thông tin mô tả sản phẩm..."
+                        minRows={5}
+                        fullWidth
+                        error={!!errors.description}
+                        helperText={errors.description?.message}
+                        InputLabelProps={{ sx: fontSize }}
+                        inputProps={{ sx: fontSize }}
+                      />
+                    )}
                   />
-                </Grid>
-                <Grid item xs={12} sm={12}>
+                </Stack>
+                <Stack>
                   <CKEditor
                     id="detail"
                     name="detail"
-                    data={isAdd ? '' : values.detail}
+                    data={isAdd ? '' : watch('detail')}
                     editor={ClassicEditor}
                     config={editorConfig}
                     onChange={(event, editor) => {
                       const data = editor.getData();
-                      setFieldValue('detail', data);
+                      setValue('detail', data);
                     }}
                     onReady={(editor) => {
                       editorRef.current = editor;
                     }}
                   />
-                </Grid>
+                </Stack>
 
-                <Grid
-                  item
-                  xs={12}
-                  sm={12}
-                  sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
-                >
+                <Stack direction="column" spacing={2}>
                   <Typography variant="body1" fontWeight={700} textAlign="left">
                     Hình ảnh
                   </Typography>
@@ -484,10 +460,20 @@ const ProductAdd = ({ isAdd }) => {
                       <Stack sx={{ height: '200px' }} direction="column" gap="24px">
                         <ImageUpload />
                         <Stack>
-                          <Typography variant="h6" textAlign="center">
+                          <Typography
+                            variant="normal"
+                            fontWeight={600}
+                            fontSize={16}
+                            textAlign="center"
+                          >
                             Drop or Select file
                           </Typography>
-                          <Typography variant="normal" textAlign="center" color="gray">
+                          <Typography
+                            variant="normal"
+                            fontSize={13}
+                            textAlign="center"
+                            color="gray"
+                          >
                             Drop files here or click browse thorough your machine
                           </Typography>
                         </Stack>
@@ -532,170 +518,192 @@ const ProductAdd = ({ isAdd }) => {
                       )}
                     </Box>
                   </FormControl>
-                </Grid>
+                </Stack>
 
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Số lượng"
-                    type="number"
+                <Stack direction={mdUp ? 'row' : 'column'} spacing={2}>
+                  <Controller
                     name="stock"
-                    fullWidth
-                    value={values.stock}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={touched.stock && !!errors.stock}
-                    helperText={touched.stock && errors.stock}
-                    required
-                    InputLabelProps={styleLabel}
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Số lượng"
+                        type="number"
+                        name="stock"
+                        fullWidth
+                        error={!!errors.stock}
+                        helperText={errors.stock?.message}
+                        required
+                        InputLabelProps={{ sx: fontSize }}
+                        inputProps={{ sx: fontSize }}
+                      />
+                    )}
                   />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Xuất xứ"
+                  <Controller
                     name="origin"
-                    disabled
-                    fullWidth
-                    value={values.origin}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={touched.origin && !!errors.origin}
-                    helperText={touched.origin && errors.origin}
-                    InputLabelProps={styleLabel}
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Xuất xứ"
+                        value={watch('origin')}
+                        name="origin"
+                        fullWidth
+                        InputLabelProps={{ sx: fontSize }}
+                        inputProps={{ sx: fontSize }}
+                        disabled
+                      />
+                    )}
                   />
-                </Grid>
-
-                <Grid item xs={12} sm={12}>
-                  <TextField
-                    label="Bảo quản"
+                </Stack>
+                <Stack>
+                  <Controller
                     name="storage"
-                    multiline
-                    placeholder="Thông tin cách bảo quản..."
-                    rows={5}
-                    fullWidth
-                    value={values.storage}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={touched.storage && !!errors.storage}
-                    helperText={touched.storage && errors.storage}
-                    InputLabelProps={styleLabel}
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Bảo quản"
+                        name="storage"
+                        multiline
+                        placeholder="Thông tin cách bảo quản..."
+                        minRows={5}
+                        fullWidth
+                        error={!!errors.storage}
+                        helperText={errors.storage?.message}
+                        InputLabelProps={{ sx: fontSize }}
+                        inputProps={{ sx: fontSize }}
+                      />
+                    )}
                   />
-                </Grid>
+                </Stack>
 
-                <Grid item xs={12} sm={12}>
-                  <Stack direction="row" gap={2}>
-                    <NumericFormat
-                      label="Giá gốc"
-                      name="price"
-                      customInput={TextField}
-                      fullWidth
-                      thousandSeparator
-                      allowNegative={false}
-                      decimalScale={2}
-                      value={values.price}
-                      onValueChange={({ floatValue }) => {
-                        setFieldValue('price', floatValue);
-                      }}
-                      onBlur={handleBlur}
-                      error={touched.price && !!errors.price}
-                      helperText={touched.price && errors.price}
-                      required
-                      InputLabelProps={styleLabel}
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <img src="/assets/images/covers/money.png" alt="" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                    <NumericFormat
-                      label="Khối lượng tịnh"
-                      name="weight"
-                      customInput={TextField}
-                      fullWidth
-                      thousandSeparator
-                      allowNegative={false}
-                      decimalScale={2}
-                      value={values.weight}
-                      onValueChange={({ floatValue }) => {
-                        setFieldValue('weight', floatValue);
-                      }}
-                      onBlur={handleBlur}
-                      error={touched.weight && !!errors.weight}
-                      helperText={touched.weight && errors.weight}
-                      required
-                      InputLabelProps={styleLabel}
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <img src="/assets/images/covers/kg.png" alt="" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Stack>
-                </Grid>
+                <Stack direction={mdUp ? 'row' : 'column'} gap={2}>
+                  <Controller
+                    name="price"
+                    control={control}
+                    render={({ field: { ref, ...rest } }) => (
+                      <NumericFormat
+                        {...rest}
+                        label="Giá gốc"
+                        name="price"
+                        customInput={TextField}
+                        fullWidth
+                        thousandSeparator
+                        allowNegative={false}
+                        decimalScale={2}
+                        onValueChange={({ floatValue }) => {
+                          setValue('price', floatValue);
+                        }}
+                        error={!!errors.price}
+                        helperText={errors.price?.message}
+                        required
+                        InputLabelProps={{ sx: fontSize }}
+                        inputProps={{ sx: fontSize }}
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <Iconify icon="noto:money-bag" width={30} />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    )}
+                  />
+                  <Controller
+                    name="weight"
+                    control={control}
+                    render={({ field: { ref, ...rest } }) => (
+                      <NumericFormat
+                        {...rest}
+                        label="Khối lượng tịnh"
+                        name="weight"
+                        customInput={TextField}
+                        fullWidth
+                        thousandSeparator
+                        allowNegative={false}
+                        decimalScale={2}
+                        onValueChange={({ floatValue }) => {
+                          setValue('weight', floatValue);
+                        }}
+                        error={!!errors.weight}
+                        helperText={errors.weight?.message}
+                        required
+                        InputLabelProps={{ sx: fontSize }}
+                        inputProps={{ sx: fontSize }}
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <Iconify icon="mdi:weight-kilogram" width={30} />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    )}
+                  />
+                </Stack>
 
-                <Grid item xs={12} sm={12}>
-                  <Stack>
-                    <Typography variant="body1" fontWeight={700} textAlign="left">
-                      Trạng thái sản phẩm
-                    </Typography>
-                    <FormControl component="fieldset" fullWidth>
-                      <FormGroup name="gender" defaultValue="false" row>
-                        <FormControlLabel
-                          id="status"
-                          name="status"
-                          value={values.status}
-                          control={
-                            <Checkbox checked={values.status} size="small" color="success" />
-                          }
-                          onBlur={handleBlur}
-                          label={<span style={{ fontSize: '12px' }}>Hiển thị</span>}
-                          onChange={handleChange}
-                        />
-                        <FormControlLabel
-                          id="home_flag"
-                          name="home_flag"
-                          value={values.home_flag}
-                          control={
-                            <Checkbox checked={values.home_flag} size="small" color="success" />
-                          }
-                          onBlur={handleBlur}
-                          onChange={handleChange}
-                          label={<span style={{ fontSize: '12px' }}>Trang chủ</span>}
-                        />
-                        <FormControlLabel
-                          id="hot_flag"
-                          name="hot_flag"
-                          value={values.hot_flag}
-                          control={
-                            <Checkbox checked={values.hot_flag} size="small" color="success" />
-                          }
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          label={<span style={{ fontSize: '12px' }}>Sản phẩm nổi bật</span>}
-                        />
-                      </FormGroup>
-                    </FormControl>
-                  </Stack>
-                </Grid>
+                <Stack direction="column">
+                  <Typography variant="body1" fontWeight={700} textAlign="left">
+                    Trạng thái sản phẩm
+                  </Typography>
+                  <FormControl component="fieldset" fullWidth>
+                    <FormGroup name="gender" defaultValue="false" row>
+                      <Controller
+                        name="status"
+                        control={control}
+                        render={({ field }) => (
+                          <FormControlLabel
+                            {...field}
+                            id="status"
+                            name="status"
+                            control={
+                              <Checkbox checked={watch('status')} size="small" color="success" />
+                            }
+                            label={<span style={fontSize}>Hiển thị</span>}
+                          />
+                        )}
+                      />
+                      <Controller
+                        name="home_flag"
+                        control={control}
+                        render={({ field }) => (
+                          <FormControlLabel
+                            {...field}
+                            id="home_flag"
+                            name="home_flag"
+                            control={
+                              <Checkbox checked={watch('home_flag')} size="small" color="success" />
+                            }
+                            label={<span style={fontSize}>Trang chủ</span>}
+                          />
+                        )}
+                      />
+                      <Controller
+                        name="hot_flag"
+                        control={control}
+                        render={({ field }) => (
+                          <FormControlLabel
+                            {...field}
+                            id="hot_flag"
+                            name="hot_flag"
+                            control={
+                              <Checkbox checked={watch('hot_flag')} size="small" color="success" />
+                            }
+                            label={<span style={fontSize}>Sản phẩm nổi bật</span>}
+                          />
+                        )}
+                      />
+                    </FormGroup>
+                  </FormControl>
+                </Stack>
 
-                <Grid
-                  item
-                  xs={12}
-                  container
-                  direction="row"
-                  gap={2}
-                  justifyContent="flex-end"
-                  alignItems="center"
-                >
+                <Stack direction="row" gap={2} justifyContent="flex-end" alignItems="center">
                   <Button
                     variant="outlined"
                     color="inherit"
                     type="button"
-                    onClick={handleCancelEdit}
+                    onClick={() => router.push('/products')}
                   >
                     Hủy
                   </Button>
@@ -704,16 +712,16 @@ const ProductAdd = ({ isAdd }) => {
                     color="inherit"
                     sx={{ backgroundColor: 'black' }}
                     type="submit"
-                    disabled={!isAdd && !dirty}
+                    disabled={isSubmitting || !isValid || (!isAdd && !isDirty)}
                   >
                     {isAdd ? 'Thêm mới' : 'Cập nhật'}
                   </Button>
-                </Grid>
-              </Grid>
+                </Stack>
+              </Stack>
             </form>
-          </div>
-        </Grid>
-      </Grid>
+          </Box>
+        </Stack>
+      </Stack>
     </Container>
   );
 };
@@ -802,6 +810,7 @@ const ButtonDeleteImage = styled.button`
 
 const StyleRemoveButton = styled.button`
   padding: 7px 7px;
+  font-size: 13px;
   border-radius: 8px;
   outline: none;
   border: 1px solid #d9d7d7;

@@ -1,5 +1,3 @@
-// ----------------------------------------------------------------------
-
 import {
   Button,
   Card,
@@ -11,6 +9,7 @@ import {
   TablePagination,
   Typography,
 } from '@mui/material';
+
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Iconify from 'src/components/iconify';
@@ -24,12 +23,10 @@ import { productCategoriesActionThunk } from 'src/redux/actions/product-categori
 import { connection } from 'src/utils/signalR';
 import { RouterLink } from 'src/routes/components';
 import { emptyRows, getComparator } from 'src/utils/untils';
-// import { productService } from 'src/apis/product-service';
 import { applyFilter } from '../filter-product';
 import ProductTableRow from '../product-table-row';
 
 export default function ProductsView() {
-  const [selected, setSelected] = useState([]);
   const [filterName, setFilterName] = useState('');
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [page, setPage] = useState(0);
@@ -58,21 +55,16 @@ export default function ProductsView() {
   }, [dispatch]);
 
   useEffect(() => {
-    try {
-      const mapProCategory = {};
-
-      productCategories.forEach((item) => {
-        mapProCategory[item.id] = item.name;
-      });
-      const newProduct = products.map((item) => ({
-        ...item,
-        product_category_name: mapProCategory[item.product_category_id],
-        product_prices: productPrices.filter((v) => v.product_id === item.id),
-      }));
-      setNewProducts(newProduct);
-    } catch (error) {
-      console.log(error);
-    }
+    const mapProCategory = {};
+    productCategories.forEach((item) => {
+      mapProCategory[item.id] = item.name;
+    });
+    const newProduct = products.map((item) => ({
+      ...item,
+      product_category_name: mapProCategory[item.product_category_id],
+      product_prices: productPrices.filter((v) => v.product_id === item.id),
+    }));
+    setNewProducts(newProduct);
   }, [productCategories, products, productPrices]);
 
   const handleFilterByName = (event) => {
@@ -93,15 +85,6 @@ export default function ProductsView() {
     return id;
   };
 
-  const handleSelectAllClick = (event) => {
-    if (event.target.checked) {
-      const newSelecteds = newProducts.map((n) => n.id);
-      setSelected(newSelecteds);
-      return;
-    }
-    setSelected([]);
-  };
-
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -111,36 +94,18 @@ export default function ProductsView() {
     setRowsPerPage(parseInt(event.target.value, 10));
   };
 
-  const handleClick = (event, name) => {
-    const selectedIndex = selected.indexOf(name);
-    let newSelected = [];
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, name);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-    setSelected(newSelected);
-  };
-
   const dataFiltered = applyFilter({
     inputData: newProducts,
     comparator: getComparator(order, orderBy),
     filterName,
   });
+
   const notFound = !dataFiltered.length && !!filterName;
 
   return (
     <Container>
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
-        <Typography variant="h4">Product</Typography>
-
+        <Typography variant="h4">Sản phẩm</Typography>
         <Button
           component={RouterLink}
           href="new"
@@ -148,15 +113,14 @@ export default function ProductsView() {
           color="inherit"
           startIcon={<Iconify icon="eva:plus-fill" />}
         >
-          New Product
+          Thêm mới
         </Button>
       </Stack>
       <Card>
         <TableToolBar
-          numSelected={selected.length}
           filterName={filterName}
           onFilterName={handleFilterByName}
-          placeHolder="Search promotion..."
+          placeHolder="Tìm kiếm sản phẩm..."
         />
         <Scrollbar>
           <TableContainer sx={{ overflow: 'unset' }}>
@@ -165,11 +129,9 @@ export default function ProductsView() {
                 order={order}
                 orderBy={orderBy}
                 rowCount={newProducts.length}
-                numSelected={selected.length}
                 onRequestSort={handleSort}
-                onSelectAllClick={handleSelectAllClick}
                 headLabel={[
-                  { id: 'name', label: 'Tên' },
+                  { id: 'name', label: 'Tên sản phẩm' },
                   { id: 'avatar', label: 'Ảnh đại diện', align: 'center' },
                   { id: 'description', label: 'Mô tả' },
                   { id: 'stock', label: 'Số lượng', align: 'center' },
@@ -190,8 +152,6 @@ export default function ProductsView() {
                       stock={row.stock}
                       status={row.status}
                       product_category_id={row.product_category_name}
-                      selected={selected.indexOf(row.id) !== -1}
-                      handleClick={(event) => handleClick(event, row.id)}
                       hanldeGetId={(event) => hanldeGetId(event, row.id)}
                     />
                   ))}
@@ -206,6 +166,7 @@ export default function ProductsView() {
           </TableContainer>
         </Scrollbar>
       </Card>
+
       <TablePagination
         page={page}
         component="div"
