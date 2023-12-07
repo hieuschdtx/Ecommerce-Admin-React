@@ -4,10 +4,7 @@ import { forwardRef } from 'react';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 
-import { error, progress, secondary, success } from 'src/theme/palette';
 import { StyledLabel } from './styles';
-
-// ----------------------------------------------------------------------
 
 const Label = forwardRef(
   ({ children, color = 'default', variant = 'soft', startIcon, endIcon, sx, ...other }, ref) => {
@@ -48,19 +45,6 @@ Label.propTypes = {
   startIcon: PropTypes.object,
   sx: PropTypes.object,
   variant: PropTypes.oneOf(['filled', 'outlined', 'ghost', 'soft']),
-  color: PropTypes.oneOf([
-    'default',
-    'primary',
-    'secondary',
-    'info',
-    'success',
-    'warning',
-    'error',
-    success.special,
-    progress.special,
-    error.special,
-    secondary.dark, // sale,
-  ]),
 };
 
 export default Label;

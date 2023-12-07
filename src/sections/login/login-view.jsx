@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
 import Box from '@mui/material/Box';
@@ -24,71 +23,101 @@ import { jwtConst } from 'src/resources/jwt-const';
 import { storage } from 'src/utils/storage';
 import { auth } from 'src/utils/auth';
 import { notify } from 'src/utils/untils';
+import { Controller, useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 
-// ----------------------------------------------------------------------
+const fontSize = {
+  fontSize: 13,
+};
+const defaultValues = {
+  phone_number: '',
+  password: '',
+};
+
+const schema = Yup.object()
+  .shape({
+    password: Yup.string().required('Vui lòng nhập mật khẩu'),
+    phone_number: Yup.string().required('Vui lòng nhập số điện thoại'),
+  })
+  .required();
 
 export default function LoginView() {
   const theme = useTheme();
-
   const [showPassword, setShowPassword] = useState(false);
-
   const router = useRouter();
 
-  const formik = useFormik({
-    initialValues: {
-      phone_number: '',
-      password: '',
-    },
-    validationSchema: validationForm,
-    onSubmit: async (values) => {
-      const { data, status } = await userService.LoginUser(values);
-      notify(data.message, status);
-
-      if (data.success) {
-        storage.setCache(jwtConst.token, data.data);
-        auth.SetUserInfo(data.data);
-        setTimeout(() => {
-          router.push('/');
-        }, 2500);
-      }
-    },
+  const {
+    handleSubmit,
+    control,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    mode: 'onBlur',
+    defaultValues,
+    resolver: yupResolver(schema),
   });
 
-  const renderForm = (
-    <form onSubmit={formik.handleSubmit}>
-      <Stack spacing={3}>
-        <TextField
-          name="phone_number"
-          label="Số điện thoại"
-          fullWidth
-          value={formik.values.phone_number}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          error={formik.touched.phone_number && !!formik.errors.phone_number}
-          helperText={formik.touched.phone_number && formik.errors.phone_number}
-          required
-        />
+  const handleLoginForm = async (value) => {
+    const {
+      data: { message, success, data },
+    } = await userService.LoginUser(value);
+    notify(message, success);
 
-        <TextField
-          fullWidth
+    if (success) {
+      storage.setCache(jwtConst.token, data);
+      auth.SetUserInfo(data);
+
+      setTimeout(() => {
+        router.push('/');
+      }, 2500);
+    }
+  };
+
+  const renderForm = (
+    <form onSubmit={handleSubmit(handleLoginForm)}>
+      <Stack spacing={3}>
+        <Controller
+          name="phone_number"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              name="phone_number"
+              label="Số điện thoại"
+              fullWidth
+              error={!!errors.phone_number}
+              helperText={errors.phone_number?.message}
+              required
+              inputProps={{ sx: fontSize }}
+              InputLabelProps={{ sx: fontSize }}
+            />
+          )}
+        />
+        <Controller
           name="password"
-          label="Password"
-          type={showPassword ? 'text' : 'password'}
-          value={formik.values.password}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          error={formik.touched.password && !!formik.errors.password}
-          helperText={formik.touched.password && formik.errors.password}
-          required
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                  <Iconify icon={showPassword ? 'eva:eye-fill' : 'eva:eye-off-fill'} />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              name="password"
+              label="Mật khẩu"
+              fullWidth
+              type={showPassword ? 'text' : 'password'}
+              error={!!errors.password}
+              helperText={errors.password?.message}
+              required
+              inputProps={{ sx: fontSize }}
+              InputLabelProps={{ sx: fontSize }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                      <Iconify icon={showPassword ? 'eva:eye-fill' : 'eva:eye-off-fill'} />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+          )}
         />
       </Stack>
 
@@ -104,7 +133,7 @@ export default function LoginView() {
         type="submit"
         variant="contained"
         color="inherit"
-        disabled={formik.isSubmitting}
+        disabled={isSubmitting}
       >
         Login
       </LoadingButton>
@@ -129,13 +158,8 @@ export default function LoginView() {
             maxWidth: 420,
           }}
         >
-          <Typography variant="h4">Sign in to MeatDeli Admin</Typography>
-
-          <Typography variant="body2" sx={{ mt: 2, mb: 5 }}>
-            Don’t have an account?
-            <Link variant="subtitle2" sx={{ ml: 0.5 }}>
-              Get started
-            </Link>
+          <Typography variant="h4" sx={{ mt: 2, mb: 5 }}>
+            Sign in to MeatDeli Admin
           </Typography>
 
           <Stack direction="row" spacing={2}>
@@ -182,14 +206,3 @@ export default function LoginView() {
     </Box>
   );
 }
-
-const validationForm = Yup.object({
-  password: Yup.string()
-    .required('Vui lòng nhập password')
-    .min(8, 'Password phải có độ dài hơn 8 kí tự'),
-
-  phone_number: Yup.string()
-    .matches(/^[0-9]+$/, 'Số điện thoại chỉ được nhập số')
-    .min(10, 'Số điện thoại không hợp lệ')
-    .required('Vui lòng nhập số điện thoại'),
-});

@@ -27,43 +27,29 @@ import TableDataHead from 'src/components/table-head/table-head';
 import UserTableRow from '../user-table-row';
 import { applyFilter } from '../filter-user';
 
-// ----------------------------------------------------------------------
-
 const UserPage = () => {
   const [userData, setUserData] = useState([]);
-
   const [page, setPage] = useState(0);
-
   const [order, setOrder] = useState('asc');
-
-  const [selected, setSelected] = useState([]);
-
   const [orderBy, setOrderBy] = useState('name');
-
   const [filterName, setFilterName] = useState('');
-
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   useEffect(() => {
     const getAllUserData = async () => {
-      try {
-        const dataUsers = await userService.GetAllUsers();
+      const dataUsers = await userService.GetAllUsers();
+      const dataRoles = await userService.GetAllRoles();
 
-        const dataRoles = await userService.GetAllRoles();
+      const map = {};
+      dataRoles.data.forEach((item) => {
+        map[item.id] = item.name;
+      });
 
-        const map = {};
-        dataRoles.data.forEach((item) => {
-          map[item.id] = item.name;
-        });
-
-        const newUserDatas = dataUsers.data.map((user) => ({
-          ...user,
-          role_name: map[user.role_id] || 'Unknown Role',
-        }));
-        setUserData(newUserDatas);
-      } catch (error) {
-        console.log(error);
-      }
+      const newUserDatas = dataUsers.data.map((user) => ({
+        ...user,
+        role_name: map[user.role_id] || 'Unknown Role',
+      }));
+      setUserData(newUserDatas);
     };
 
     getAllUserData();
@@ -77,31 +63,9 @@ const UserPage = () => {
     }
   };
 
-  const handleSelectAllClick = (event) => {
-    if (event.target.checked) {
-      const newSelecteds = userData.map((n) => n.id);
-      setSelected(newSelecteds);
-      return;
-    }
-    setSelected([]);
-  };
-
-  const handleClick = (event, name) => {
-    const selectedIndex = selected.indexOf(name);
-    let newSelected = [];
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, name);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-    setSelected(newSelected);
+  const hanldeGetId = (event, id) => {
+    event.preventDefault();
+    return id;
   };
 
   const handleChangePage = (event, newPage) => {
@@ -129,7 +93,7 @@ const UserPage = () => {
   return (
     <Container>
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
-        <Typography variant="h4">Users</Typography>
+        <Typography variant="h4">Quản lý người dùng</Typography>
 
         <Button
           component={RouterLink}
@@ -138,16 +102,15 @@ const UserPage = () => {
           color="inherit"
           startIcon={<Iconify icon="eva:plus-fill" />}
         >
-          New User
+          Thêm mới
         </Button>
       </Stack>
 
       <Card>
         <TableToolBar
-          numSelected={selected.length}
           filterName={filterName}
           onFilterName={handleFilterByName}
-          placeHolder="Search user..."
+          placeHolder="Tìm kiếm người dùng..."
         />
 
         <Scrollbar>
@@ -156,16 +119,13 @@ const UserPage = () => {
               <TableDataHead
                 order={order}
                 orderBy={orderBy}
-                rowCount={userData.length}
-                numSelected={selected.length}
                 onRequestSort={handleSort}
-                onSelectAllClick={handleSelectAllClick}
                 headLabel={[
-                  { id: 'name', label: 'Name' },
-                  { id: 'phoneNumber', label: 'Phone number' },
+                  { id: 'name', label: 'Tên người dùng' },
+                  { id: 'phoneNumber', label: 'Số điện thoại' },
                   { id: 'email', label: 'Email' },
-                  { id: 'role', label: 'Role' },
-                  { id: 'createdAt', label: 'Created at' },
+                  { id: 'role', label: 'Quyền người dùng', align: 'center' },
+                  { id: 'createdAt', label: 'Ngày tạo' },
                   { id: '' },
                 ]}
               />
@@ -185,8 +145,8 @@ const UserPage = () => {
                       }
                       email={row.email}
                       createdAt={fDateTime(row.created_at, null)}
-                      selected={selected.indexOf(row.id) !== -1}
                       handleClick={(event) => handleClick(event, row.id)}
+                      hanldeGetId={(event) => hanldeGetId(event, row.id)}
                     />
                   ))}
 

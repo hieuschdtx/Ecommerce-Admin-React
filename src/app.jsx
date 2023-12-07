@@ -38,9 +38,8 @@ const App = () => {
 
   useEffect(() => {
     const isAuthenticated = auth.CheckExprise();
-    const hasAccess = auth.GetAccess();
 
-    if (!(isAuthenticated && hasAccess)) {
+    if (!isAuthenticated) {
       router.push('/login');
     }
   }, [router]);

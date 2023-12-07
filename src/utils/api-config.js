@@ -1,4 +1,7 @@
 import axios from 'axios';
+import { auth } from './auth';
+import { storage } from './storage';
+import { jwtConst } from 'src/resources/jwt-const';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 export const methods = {
@@ -13,7 +16,10 @@ export const callApi = async (path, method, headers, body) => {
   try {
     const resp = await axios(url, {
       method,
-      headers,
+      headers: {
+        ...headers,
+        Authorization: `Bearer ${storage.getCache(jwtConst.token)}`,
+      },
       data: body,
       withCredentials: true,
     });

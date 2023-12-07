@@ -35,6 +35,7 @@ const navConfig = [
     title: 'Tài khoản',
     path: '/user',
     icon: icon('solar:user-bold'),
+    disabled: true,
   },
   {
     title: 'Bài viết',

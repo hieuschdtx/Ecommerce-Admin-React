@@ -25,6 +25,7 @@ import navConfig from './config-navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { userActionThunk } from 'src/redux/actions/user-action';
 import { roleActionThunk } from 'src/redux/actions/role-action';
+import { auth } from 'src/utils/auth';
 
 const BACKEND_URI = import.meta.env.VITE_BACKEND_URL;
 
@@ -151,6 +152,7 @@ Nav.propTypes = {
 
 function NavItem({ item }) {
   const pathname = usePathname();
+  const isAdmin = auth.GetAccess(storage.getCache(jwtConst.token));
 
   const active = item.path === pathname;
 
@@ -180,6 +182,7 @@ function NavItem({ item }) {
         <ListItemButton
           component={RouterLink}
           href={item.path}
+          disabled={!isAdmin === item.disabled}
           sx={{
             minHeight: 44,
             borderRadius: 0.75,
