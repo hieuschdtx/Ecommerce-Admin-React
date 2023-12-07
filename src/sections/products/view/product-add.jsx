@@ -36,6 +36,7 @@ import { useResponsive } from 'src/hooks/use-responsive';
 import { primary } from 'src/theme/palette';
 import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
+import CustomAvatar from 'src/components/avatar/avatar';
 
 const editorConfig = {
   enterMode: 'CKEditor5.EnterMode.PARAGRAPH',
@@ -70,12 +71,19 @@ const defaultValues = {
 const schema = Yup.object()
   .shape({
     name: Yup.string().required('Tên sản phẩm không được để trống'),
-    price: Yup.string().required('Vui lòng nhập giá sản phẩm').min(0, 'Giá không được bé hơn 0'),
-    weight: Yup.string()
-      .required('Vui lòng nhập khối lượng')
-      .min(0, 'Khối lượng không được bé hơn 0'),
-    stock: Yup.string().required('Vui lòng nhập số lượng').min(0, 'Số lượng không được bé hơn 0'),
     product_category_id: Yup.string().required('Vui lòng chọn danh mục hiển thị'),
+    price: Yup.number()
+      .typeError('Giá phải là số')
+      .required('Vui lòng nhập giá sản phẩm')
+      .min(0, 'Giá phải lớn hơn 0'),
+    weight: Yup.number()
+      .typeError('Khối lượng phải là số')
+      .required('Vui lòng nhập khối lượng sản phẩm')
+      .min(0, 'Khối lượng phải lớn hơn 0'),
+    stock: Yup.number()
+      .typeError('Số lượng phải là số')
+      .required('Vui lòng nhập số lượng')
+      .min(0, 'Số lượng phải lớn hơn 0'),
   })
   .required();
 
@@ -266,75 +274,11 @@ const ProductAdd = ({ isAdd }) => {
     <Container>
       <Typography variant="h4">{isAdd ? 'Thêm mới sản phẩm' : 'Chỉnh sửa sản phẩm'}</Typography>
       <Stack direction={mdUp ? 'row' : 'column'} justifyContent="space-between" spacing={3} mt={2}>
-        <Stack
-          sx={{
-            backgroundColor: 'white',
-            borderRadius: '16px',
-            padding: '16px',
-            border: '1px solid #d2d2d3',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 1,
-            maxHeight: '250px',
-            flex: 1,
-          }}
-        >
-          <Box
-            sx={{
-              position: 'relative',
-              display: 'inline-block',
-              borderRadius: '50%',
-              width: 150,
-              height: 150,
-            }}
-          >
-            <input
-              id="avatar_file"
-              name="avatar_file"
-              type="file"
-              ref={fileInputAvatarRef}
-              style={{ display: 'none' }}
-              onChange={handleFileChanges}
-            />
-
-            <Avatar
-              variant="circular"
-              src={selectedAvatar}
-              alt=""
-              sx={{
-                width: 1,
-                height: 1,
-                objectFit: 'cover',
-              }}
-            />
-            <Button
-              type="button"
-              variant="contained"
-              sx={{
-                position: 'absolute',
-                backgroundColor: selectedAvatar ? 'transparent' : primary.main,
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                borderRadius: '50%',
-                width: 1,
-                height: 1,
-                fontSize: 32,
-                '&:hover': {
-                  backgroundColor: selectedAvatar ? 'transparent' : primary.main,
-                },
-              }}
-              onClick={() => fileInputAvatarRef.current.click()}
-            >
-              {selectedAvatar ? ' ' : <i className="bi bi-camera-fill" />}
-            </Button>
-          </Box>
-          <Typography sx={{ textAlign: 'center', fontSize: '12px' }}>
-            Allowed *.jpeg, *.jpg, *.png, *.gif max size of 3.1 MB
-          </Typography>
-        </Stack>
+        <CustomAvatar
+          fileInputAvatarRef={fileInputAvatarRef}
+          handleFileChanges={handleFileChanges}
+          selectedAvatar={selectedAvatar}
+        />
         <Stack
           sx={{
             backgroundColor: 'white',
