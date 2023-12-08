@@ -1,4 +1,4 @@
-import { format, getTime, formatDistanceToNow, isAfter } from 'date-fns';
+import { format, getTime, formatDistanceToNow, isAfter, parseISO } from 'date-fns';
 
 // ----------------------------------------------------------------------
 
@@ -31,4 +31,7 @@ export function fCompareTime(date) {
   const currentDate = new Date();
 
   return isAfter(targetDate, currentDate);
+}
+export function fStringToDate(date) {
+  return date ? parseISO(date) : '';
 }
