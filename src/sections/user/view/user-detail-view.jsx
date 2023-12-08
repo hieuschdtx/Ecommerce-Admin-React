@@ -34,7 +34,10 @@ import { useSelector } from 'react-redux';
 import { useRouter } from 'src/routes/hooks';
 import { notify } from 'src/utils/untils';
 import { useParams } from 'react-router-dom';
+import { fDate, fStringToDate } from 'src/utils/format-time';
+import { connection } from 'src/utils/signalR';
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const fontSize = {
   fontSize: 13,
 };
@@ -53,7 +56,7 @@ const defaultValues = {
   full_name: '',
   avatar_file: null,
   email: '',
-  address: '',
+  address: null,
   day_of_birth: new Date(),
   gender: false,
   phone_number: '',
@@ -61,33 +64,47 @@ const defaultValues = {
   role_id: '',
 };
 
-const schema = Yup.object()
-  .shape({
-    full_name: Yup.string().required('Vui lòng nhập tên'),
-    email: Yup.string().email('Email không hợp lệ').required('Vui lòng nhập email'),
-    address: Yup.string().required('Vui lòng nhập địa chỉ'),
-    day_of_birth: Yup.date().required('Vui lòng chọn ngày sinh'),
-    phone_number: Yup.string().matches(/^0\d{9}$/, phoneIsInvalidLength),
-    password: Yup.string()
-      .required('Vui lòng nhập password')
-      .min(8, 'Password phải có độ dài hơn 8 kí tự')
-      .matches(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/,
-        'Password phải chứa ít nhất một ký tự in hoa, một số, kí tự đặc biệt'
-      ),
-    role_id: Yup.string().required('Vui lòng chọn quyền người dùng'),
-  })
-  .required();
-
 export default function UserDetailView({ isAdd }) {
   const mdUp = useResponsive('up', 'md');
   const [selectedAvatar, setSelectedAvatar] = useState(null);
+  const [customIsDirty, setCustomIsDirty] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const fileInputAvatarRef = useRef(null);
   const [roles, SetRoles] = useState([]);
   const { id } = useParams();
   const { user } = useSelector((x) => x.rootReducer.user);
   const router = useRouter();
+
+  const schema = Yup.object()
+    .shape({
+      full_name: Yup.string().required('Vui lòng nhập tên'),
+      email: Yup.string().email('Email không hợp lệ').required('Vui lòng nhập email'),
+      day_of_birth: Yup.date().required('Vui lòng chọn ngày sinh'),
+      phone_number: Yup.string().matches(/^0\d{9}$/, phoneIsInvalidLength),
+      password: Yup.string().test('password', 'Password phải được nhập', function (value) {
+        if (!isAdd) {
+          return true;
+        }
+        if (!value) {
+          return this.createError({ message: 'Vui lòng nhập password', path: 'password' });
+        }
+        if (value.length < 8) {
+          return this.createError({
+            message: 'Password phải có độ dài hơn 8 kí tự',
+            path: 'password',
+          });
+        }
+        if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/.test(value)) {
+          return this.createError({
+            message: 'Password phải chứa ít nhất một ký tự in hoa, một số, kí tự đặc biệt',
+            path: 'password',
+          });
+        }
+        return true;
+      }),
+      role_id: Yup.string().required('Vui lòng chọn quyền người dùng'),
+    })
+    .required();
 
   const {
     setValue,
@@ -111,42 +128,78 @@ export default function UserDetailView({ isAdd }) {
   }, []);
 
   useEffect(() => {
-    const handleGetUser = async () => {
-      try {
-        const { data } = await userService.getUserById({ id });
-        return data;
-      } catch (error) {
-        console.error(error);
-      }
-    };
+    if (!isAdd) {
+      connection.on('RELOAD_DATA_CHANGE', () => {
+        if (!isAdd && id) {
+          handleGetUser().then((data) => {
+            const val = {
+              ...defaultValues,
+              ...data,
+              day_of_birth: fStringToDate(data.dob) || new Date(),
+            };
+            val.avatar && setSelectedAvatar(`${BACKEND_URL}images/avatars${val.avatar}`);
+            reset(val);
+          });
+        }
+      });
+    }
+  }, []);
 
+  useEffect(() => {
     if (!isAdd && id) {
       handleGetUser().then((data) => {
-        const val = { ...defaultValues, ...data };
+        const val = {
+          ...defaultValues,
+          ...data,
+          day_of_birth: fStringToDate(data.dob) || new Date(),
+        };
+        val.avatar && setSelectedAvatar(`${BACKEND_URL}images/avatars${val.avatar}`);
+        console.log(val);
         reset(val);
       });
     }
   }, [id, isAdd]);
 
+  const handleGetUser = async () => {
+    try {
+      const { data } = await userService.getUserById({ id });
+      return data;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleSubmitForm = async (value) => {
-    console.log(value);
     const formData = new FormData();
     Object.entries({
       ...value,
       created_by: user.full_name,
-      day_of_birth: value.day_of_birth.toISOString().split('T')[0],
+      modified_by: user.full_name,
+      address: value.address || 'Không có',
+      day_of_birth: fDate(value.day_of_birth, 'yyyy-MM-dd'),
     }).forEach(([key, item]) => formData.append(key, item));
 
-    const {
-      data: { message },
-      status,
-    } = await userService.CreateNewUser(formData);
-    notify(message, status);
+    if (!isAdd) {
+      const {
+        data: { message, success },
+      } = await userService.updateUser(formData);
+      notify(message, success);
+      if (success) {
+        setCustomIsDirty(true);
+      }
+    } else {
+      const {
+        data: { message, success },
+      } = await userService.CreateNewUser(formData);
+      notify(message, success);
+      reset(defaultValues);
+    }
   };
 
   const handleFileChanges = (event) => {
     const file = event.target.files[0];
     setValue('avatar_file', file);
+    setCustomIsDirty(false);
 
     if (file) {
       const reader = new FileReader();
@@ -159,7 +212,7 @@ export default function UserDetailView({ isAdd }) {
 
   return (
     <Container>
-      <Typography variant="h4">Thêm mới người dùng</Typography>
+      <Typography variant="h4">{!isAdd ? 'Cập nhật người dùng' : 'Thêm mới người dùng'}</Typography>
       <Stack direction={mdUp ? 'row' : 'column'} justifyContent="space-between" spacing={3} mt={2}>
         <CustomAvatar
           fileInputAvatarRef={fileInputAvatarRef}
@@ -229,10 +282,10 @@ export default function UserDetailView({ isAdd }) {
                       name="address"
                       fullWidth
                       multiline
+                      value={watch('address') || ''}
                       minRows={3}
                       error={!!errors.address}
                       helperText={errors.address?.message}
-                      required
                       InputLabelProps={{ sx: fontSize }}
                       inputProps={{ sx: fontSize }}
                     />
@@ -312,33 +365,37 @@ export default function UserDetailView({ isAdd }) {
                     />
                   )}
                 />
-                <Controller
-                  name="password"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Mật khẩu"
-                      name="password"
-                      fullWidth
-                      type={showPassword ? 'text' : 'password'}
-                      error={!!errors.password}
-                      helperText={errors.password?.message}
-                      required
-                      InputLabelProps={{ sx: fontSize }}
-                      inputProps={{ sx: fontSize }}
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                              <Iconify icon={showPassword ? 'eva:eye-fill' : 'eva:eye-off-fill'} />
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  )}
-                />
+                {isAdd && (
+                  <Controller
+                    name="password"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Mật khẩu"
+                        name="password"
+                        fullWidth
+                        type={showPassword ? 'text' : 'password'}
+                        error={!!errors.password}
+                        helperText={errors.password?.message}
+                        required
+                        InputLabelProps={{ sx: fontSize }}
+                        inputProps={{ sx: fontSize }}
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                                <Iconify
+                                  icon={showPassword ? 'eva:eye-fill' : 'eva:eye-off-fill'}
+                                />
+                              </IconButton>
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    )}
+                  />
+                )}
               </Stack>
               <Stack>
                 <FormControl fullWidth>
@@ -384,9 +441,9 @@ export default function UserDetailView({ isAdd }) {
                   variant="contained"
                   color="primary"
                   type="submit"
-                  disabled={isSubmitting || !isValid}
+                  disabled={isSubmitting || (!isAdd && !isDirty && customIsDirty)}
                 >
-                  Thêm mới
+                  {!isAdd ? 'Cập nhật' : 'Thêm mới'}
                 </Button>
                 <Button
                   variant="outlined"
