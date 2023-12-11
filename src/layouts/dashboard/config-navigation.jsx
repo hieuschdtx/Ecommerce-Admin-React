@@ -1,7 +1,4 @@
 import Iconify from 'src/components/iconify';
-import SvgColor from 'src/components/svg-color';
-
-// ----------------------------------------------------------------------
 
 const icon = (name) => <Iconify icon={name} sx={{ width: 1, height: 1 }} />;
 
@@ -30,6 +27,11 @@ const navConfig = [
     title: 'Khuyến mãi',
     path: '/promotion',
     icon: icon('foundation:burst-sale'),
+  },
+  {
+    title: 'Đơn hàng',
+    path: '/order',
+    icon: icon('material-symbols:orders'),
   },
   {
     title: 'Tài khoản',
