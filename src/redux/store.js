@@ -5,6 +5,7 @@ import promotionReducer from './reducers/promotion-reducer';
 import productReducer from './reducers/product-reducer';
 import userReducer from './reducers/user-reducer';
 import roleReducer from './reducers/role-reducer';
+import orderReducer from './reducers/order-reducer';
 
 const rootReducer = combineReducers({
   category: categorySliceReducer,
@@ -13,6 +14,7 @@ const rootReducer = combineReducers({
   products: productReducer,
   user: userReducer,
   role: roleReducer,
+  orders: orderReducer,
 });
 
 const store = configureStore({
