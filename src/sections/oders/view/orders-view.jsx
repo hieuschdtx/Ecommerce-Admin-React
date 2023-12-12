@@ -21,25 +21,34 @@ import { emptyRows, getComparator } from 'src/utils/untils';
 import { applyFilter } from '../filter-order';
 import { orderActionThunk } from 'src/redux/actions/order-action';
 import OrderTableRow from '../order-table-row';
-import { fDate, fDateTime, fStringToDate } from 'src/utils/format-time';
+import { fDateTime } from 'src/utils/format-time';
+import OrderTableStatus from '../order-table-status';
+import { customShadows } from 'src/theme/custom-shadows';
+import OrderTableDate from '../order-table-date';
+import { useResponsive } from 'src/hooks/use-responsive';
+import TableNoData from 'src/components/table-no-data/table-no-data';
 
 export default function OrdersView() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [orderBy, setOrderBy] = useState('name');
+  const [orderBy, setOrderBy] = useState('code');
   const [page, setPage] = useState(0);
-  const [open, setOpen] = useState(false);
-  const [order, setOrder] = useState('asc');
-  const [filterName, setFilterName] = useState('');
+  const [order, setOrder] = useState('desc');
+  const [code, setCode] = useState('');
+  const [fromDay, setFromDay] = useState();
+  const [today, setToday] = useState();
   const { orders } = useSelector((x) => x.rootReducer.orders);
   const dispatch = useDispatch();
+  const shadow = customShadows();
+  const mdUp = useResponsive('up', 'md');
+  const [selectStatus, setSelectStatus] = useState(0);
 
   useEffect(() => {
     dispatch(orderActionThunk.GetAllOrder());
-  }, [dispatch]);
+  }, []);
 
   const handleFilterByName = (event) => {
     setPage(0);
-    setFilterName(event.target.value);
+    setCode(event.target.value);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -67,30 +76,32 @@ export default function OrdersView() {
   const dataFiltered = applyFilter({
     inputData: orders,
     comparator: getComparator(order, orderBy),
-    filterName,
+    code,
+    selectStatus,
+    fromDay,
+    today,
   });
 
-  const notFound = !dataFiltered.length && !!filterName;
+  const notFound = !dataFiltered.length && !!code;
 
   return (
     <Container>
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
         <Typography variant="h4">Đơn hàng</Typography>
-        <Button
-          variant="contained"
-          color="inherit"
-          startIcon={<Iconify icon="eva:plus-fill" />}
-          onClick={() => setOpen(true)}
-        >
+        <Button variant="contained" color="inherit" startIcon={<Iconify icon="eva:plus-fill" />}>
           Thêm mới
         </Button>
       </Stack>
-      <Card>
-        <TableToolBar
-          filterName={filterName}
-          onFilterName={handleFilterByName}
-          placeHolder="Tìm kiếm đơn hàng..."
-        />
+      <Card sx={{ boxShadow: shadow.z16 }}>
+        <OrderTableStatus handleGetStatus={setSelectStatus} />
+        <Stack direction={mdUp ? 'row' : 'column-reverse'} alignItems="center">
+          <OrderTableDate handleFromDay={setFromDay} handleToDay={setToday} />
+          <TableToolBar
+            filterName={code}
+            onFilterName={handleFilterByName}
+            placeHolder="Nhập mã code hoặc tên khách hàng"
+          />
+        </Stack>
 
         <Scrollbar>
           <TableContainer sx={{ overflow: 'unset' }}>
@@ -132,7 +143,7 @@ export default function OrdersView() {
                   emptyRows={emptyRows(page, rowsPerPage, orders.length)}
                 />
 
-                {notFound && <TableNoData query={filterName} />}
+                {notFound && <TableNoData query={code} />}
               </TableBody>
             </Table>
           </TableContainer>

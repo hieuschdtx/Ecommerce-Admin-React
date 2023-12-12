@@ -107,12 +107,13 @@ const UserPage = () => {
       </Stack>
 
       <Card>
-        <TableToolBar
-          filterName={filterName}
-          onFilterName={handleFilterByName}
-          placeHolder="Tìm kiếm người dùng..."
-        />
-
+        <Stack height={96} paddingTop={2}>
+          <TableToolBar
+            filterName={filterName}
+            onFilterName={handleFilterByName}
+            placeHolder="Tìm kiếm người dùng..."
+          />
+        </Stack>
         <Scrollbar>
           <TableContainer sx={{ overflow: 'unset' }}>
             <Table sx={{ minWidth: 800 }}>

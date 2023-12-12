@@ -154,7 +154,6 @@ export default function UserDetailView({ isAdd }) {
           day_of_birth: fStringToDate(data.dob) || new Date(),
         };
         val.avatar && setSelectedAvatar(`${BACKEND_URL}images/avatars${val.avatar}`);
-        console.log(val);
         reset(val);
       });
     }
