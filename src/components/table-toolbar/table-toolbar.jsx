@@ -13,7 +13,6 @@ export default function TableToolBar({ filterName, onFilterName, placeHolder }) 
   return (
     <Toolbar
       sx={{
-        height: 96,
         display: 'flex',
         justifyContent: 'space-between',
         p: (theme) => theme.spacing(0, 1, 0, 3),
@@ -34,12 +33,6 @@ export default function TableToolBar({ filterName, onFilterName, placeHolder }) 
           </InputAdornment>
         }
       />
-
-      <Tooltip title="Filter list">
-        <IconButton>
-          <Iconify icon="ic:round-filter-list" />
-        </IconButton>
-      </Tooltip>
     </Toolbar>
   );
 }

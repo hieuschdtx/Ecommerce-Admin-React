@@ -254,7 +254,6 @@ const ProductAdd = ({ isAdd }) => {
   }, [selectedThumbnail, watch('name')]);
 
   const handleDeleteImageUpload = (index) => {
-    console.log(index);
     const regex = /products(.*)/;
 
     const updatedSelectedThumbnails = selectedThumbnail.filter((item, i) => i !== index);

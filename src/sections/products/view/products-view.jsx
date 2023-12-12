@@ -117,11 +117,13 @@ export default function ProductsView() {
         </Button>
       </Stack>
       <Card>
-        <TableToolBar
-          filterName={filterName}
-          onFilterName={handleFilterByName}
-          placeHolder="Tìm kiếm sản phẩm..."
-        />
+        <Stack height={96} paddingTop={2}>
+          <TableToolBar
+            filterName={filterName}
+            onFilterName={handleFilterByName}
+            placeHolder="Tìm kiếm sản phẩm..."
+          />
+        </Stack>
         <Scrollbar>
           <TableContainer sx={{ overflow: 'unset' }}>
             <Table sx={{ minWidth: 800 }}>

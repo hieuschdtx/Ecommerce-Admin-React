@@ -102,11 +102,13 @@ export default function PromotionView() {
           </Button>
         </Stack>
         <Card>
-          <TableToolBar
-            filterName={filterName}
-            onFilterName={handleFilterByName}
-            placeHolder="Tìm kiếm khuyến mãi..."
-          />
+          <Stack height={96} paddingTop={2}>
+            <TableToolBar
+              filterName={filterName}
+              onFilterName={handleFilterByName}
+              placeHolder="Tìm kiếm khuyến mãi..."
+            />
+          </Stack>
           <Scrollbar>
             <TableContainer sx={{ overflow: 'unset' }}>
               <Table sx={{ minWidth: 800 }}>

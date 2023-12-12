@@ -12,6 +12,7 @@ import { useState } from 'react';
 import Iconify from 'src/components/iconify';
 import Label from 'src/components/label';
 import ModalDelete from 'src/components/modal-delete/modal-delete';
+import { statusDefaultValues } from 'src/resources/order';
 import { error, success } from 'src/theme/palette';
 import { fNumber } from 'src/utils/format-number';
 import { notify } from 'src/utils/untils';
@@ -73,24 +74,27 @@ export default function OrderTableRow({
         fontSize: '11px',
         pl: 1.5,
         pr: 1.5,
-        width: '100',
+        width: 105,
       }}
     >
       {paymentStatus ? 'Đã thanh toán' : 'Chưa thanh toán'}
     </Label>
   );
+
+  const dataStatus = statusDefaultValues.find((item) => item.value === status);
+
   const renderStatus = (
     <Label
       variant="filled"
-      color={status ? success.special : yellow[800]}
+      color={dataStatus.color}
       sx={{
         fontSize: '11px',
         pl: 1.5,
         pr: 1.5,
-        width: '100',
+        width: 100,
       }}
     >
-      {status ? 'Đã giao hàng' : 'Đang giao hàng'}
+      {dataStatus.label}
     </Label>
   );
 
@@ -157,7 +161,7 @@ export default function OrderTableRow({
           </Stack>
         </TableCell>
 
-        <TableCell align="right">
+        <TableCell width={80}>
           <IconButton onClick={handleOpenMenu}>
             <Iconify icon="eva:more-vertical-fill" />
           </IconButton>

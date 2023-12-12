@@ -164,7 +164,7 @@ export default function PromotionTableRow({
           </Stack>
         </TableCell>
 
-        <TableCell align="right">
+        <TableCell width={80}>
           <IconButton onClick={handleOpenMenu}>
             <Iconify icon="eva:more-vertical-fill" />
           </IconButton>
@@ -182,7 +182,7 @@ export default function PromotionTableRow({
         }}
       >
         <MenuItem onClick={(event) => handleEditPromotion(event)}>
-          <Iconify icon="eva:edit-fill" sx={{ mr: 2 }} />
+          <Iconify icon="eva:edit-fill" sx={{ mr: 2 }} width={10} />
           Chỉnh sửa
         </MenuItem>
 

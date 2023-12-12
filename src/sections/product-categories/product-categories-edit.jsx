@@ -102,7 +102,6 @@ export default function ProductCategoriesEdit({ open, handleClose, proCategory }
   useEffect(() => {
     if (filterProductCategory) {
       const val = { ...defaultValues, ...filterProductCategory };
-      console.log(val);
       reset(val);
     }
   }, [filterProductCategory]);

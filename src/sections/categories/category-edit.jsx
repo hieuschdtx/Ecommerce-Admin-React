@@ -80,7 +80,6 @@ const CategoryEdit = ({ open, handleClose, categoryId }) => {
   });
 
   const onSubmitUpdate = async (value) => {
-    console.log(value);
     const {
       data: { message },
       status,
