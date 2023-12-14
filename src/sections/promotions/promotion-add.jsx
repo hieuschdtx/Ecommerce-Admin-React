@@ -1,10 +1,8 @@
 import {
   Box,
-  Button,
   Container,
   FormControl,
   FormHelperText,
-  Grid,
   IconButton,
   InputLabel,
   MenuItem,
@@ -45,7 +43,6 @@ const style = {
   border: 'none',
   borderRadius: '16px',
   p: 3,
-  width: '50%',
 };
 
 const defaultValues = {
@@ -87,7 +84,6 @@ export default function PromotionAdd({ open, setOpen, isEdit, id = '' }) {
   const {
     control,
     handleSubmit,
-    setValue,
     watch,
     reset,
     formState: { errors, isDirty, isValid, isSubmitting },
@@ -144,7 +140,7 @@ export default function PromotionAdd({ open, setOpen, isEdit, id = '' }) {
       aria-labelledby="modal-modal-title"
       aria-describedby="modal-modal-description"
     >
-      <Container sx={style}>
+      <Container sx={{ ...style, width: mdUp ? '60%' : '85%' }}>
         <IconButton onClick={handleClose} sx={{ position: 'absolute', top: 4, right: 4 }}>
           <Iconify icon="iconamoon:close" width={24} height={24} />
         </IconButton>

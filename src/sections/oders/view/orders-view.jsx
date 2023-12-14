@@ -92,7 +92,7 @@ export default function OrdersView() {
           Thêm mới
         </Button>
       </Stack>
-      <Card sx={{ boxShadow: shadow.z16 }}>
+      <Card sx={{ boxShadow: shadow.cards }}>
         <OrderTableStatus handleGetStatus={setSelectStatus} />
         <Stack direction={mdUp ? 'row' : 'column-reverse'} alignItems="center">
           <OrderTableDate handleFromDay={setFromDay} handleToDay={setToday} />
