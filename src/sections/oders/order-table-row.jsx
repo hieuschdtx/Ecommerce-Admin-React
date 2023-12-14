@@ -7,12 +7,11 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { yellow } from '@mui/material/colors';
 import { useState } from 'react';
 import Iconify from 'src/components/iconify';
 import Label from 'src/components/label';
-import ModalDelete from 'src/components/modal-delete/modal-delete';
 import { statusDefaultValues } from 'src/resources/order';
+import { useRouter } from 'src/routes/hooks';
 import { error, success } from 'src/theme/palette';
 import { fNumber } from 'src/utils/format-number';
 import { notify } from 'src/utils/untils';
@@ -28,9 +27,7 @@ export default function OrderTableRow({
   hanldeGetId,
 }) {
   const [open, setOpen] = useState(null);
-  const [openModalDelete, setOpenModalDelete] = useState(false);
-  const [openModalEdit, setOpenModalEdit] = useState(false);
-  const [id, setId] = useState(null);
+  const router = useRouter();
 
   const handleOpenMenu = (event) => {
     setOpen(event.currentTarget);
@@ -40,30 +37,10 @@ export default function OrderTableRow({
     setOpen(null);
   };
 
-  const handleEditModal = (event) => {
-    const categoryId = hanldeGetId(event);
-
-    setId(categoryId);
-    setOpenModalEdit(true);
+  const handleViewOrder = (event) => {
+    const orderId = hanldeGetId(event);
+    router.push(`/order/${orderId}/edit`);
     setOpen(null);
-  };
-
-  const handleDeleteModal = async (event) => {
-    const categoryId = hanldeGetId(event);
-
-    setId(categoryId);
-    setOpenModalDelete(true);
-    setOpen(null);
-  };
-
-  const handleDeleteCategory = async () => {
-    if (id) {
-      const { data, status } = await order.DeleteCategory(id);
-      setId(null);
-      const { message } = data;
-      notify(message, status);
-    }
-    setId(null);
   };
 
   const renderPaymentStatus = (
@@ -100,18 +77,6 @@ export default function OrderTableRow({
 
   return (
     <>
-      <ModalDelete
-        open={openModalDelete}
-        handleClose={() => setOpenModalDelete(false)}
-        handleAccept={handleDeleteCategory}
-      />
-      {openModalEdit && (
-        <CategoryEdit
-          open={openModalEdit}
-          handleClose={() => setOpenModalEdit(false)}
-          categoryId={id}
-        />
-      )}
       <TableRow hover tabIndex={-1} role="checkbox">
         <TableCell component="th" scope="row" padding="normal">
           <Stack direction="row" alignItems="center" spacing={2}>
@@ -178,19 +143,9 @@ export default function OrderTableRow({
           sx: { width: 140 },
         }}
       >
-        <MenuItem onClick={(event) => handleEditModal(event)}>
-          <Iconify icon="eva:edit-fill" sx={{ mr: 2 }} />
-          Chỉnh sửa
-        </MenuItem>
-
-        <MenuItem
-          onClick={(event) => {
-            handleDeleteModal(event);
-          }}
-          sx={{ color: 'error.main' }}
-        >
-          <Iconify icon="eva:trash-2-outline" sx={{ mr: 2 }} />
-          Xóa
+        <MenuItem onClick={(event) => handleViewOrder(event)}>
+          <Iconify icon="carbon:view-filled" sx={{ mr: 2 }} />
+          Xem
         </MenuItem>
       </Popover>
     </>

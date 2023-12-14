@@ -42,7 +42,6 @@ const style = {
   border: 'none',
   borderRadius: '24px',
   p: 3,
-  width: '50%',
   overflowY: 'scroll hidden',
   height: '60vh',
   outline: 'none',
@@ -127,7 +126,7 @@ export default function ProductCategoriesEdit({ open, handleClose, proCategory }
       aria-describedby="modal-modal-description"
       sx={{ overflow: 'auto' }}
     >
-      <Container sx={style}>
+      <Container sx={{ ...style, width: mdUp ? '60%' : '85%' }}>
         <Paper sx={stylePaper}>
           <IconButton onClick={handleClose} sx={{ position: 'absolute', top: 4, right: 4 }}>
             <Iconify icon="iconamoon:close" width={24} height={24} />
