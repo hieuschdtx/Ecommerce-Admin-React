@@ -20,7 +20,7 @@ const CheckboxCustomize = styled('span')(({ theme }) => ({
     outlineOffset: 2,
   },
   'input:hover ~ &': {
-    backgroundColor: theme.palette.mode === 'dark' ? '#30404d' : '#ebf1f5',
+    backgroundColor: theme.palette.mode === 'dark' ? '#30404d' : 'transparent',
   },
   'input:disabled ~ &': {
     boxShadow: 'none',
@@ -50,11 +50,7 @@ const BpCheckedIcon = styled(CheckboxCustomize)({
 export default function CsCheckbox(props) {
   return (
     <Checkbox
-      sx={{
-        '&:hover': { bgcolor: 'transparent' },
-      }}
       disableRipple
-      color="default"
       checkedIcon={<BpCheckedIcon />}
       icon={<CheckboxCustomize />}
       inputProps={{ 'aria-label': 'Checkbox demo' }}

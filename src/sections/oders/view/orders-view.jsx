@@ -27,6 +27,7 @@ import { customShadows } from 'src/theme/custom-shadows';
 import OrderTableDate from '../order-table-date';
 import { useResponsive } from 'src/hooks/use-responsive';
 import TableNoData from 'src/components/table-no-data/table-no-data';
+import { RouterLink } from 'src/routes/components';
 
 export default function OrdersView() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -88,9 +89,6 @@ export default function OrdersView() {
     <Container>
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
         <Typography variant="h4">Đơn hàng</Typography>
-        <Button variant="contained" color="inherit" startIcon={<Iconify icon="eva:plus-fill" />}>
-          Thêm mới
-        </Button>
       </Stack>
       <Card sx={{ boxShadow: shadow.cards }}>
         <OrderTableStatus handleGetStatus={setSelectStatus} />

@@ -15,6 +15,8 @@ import OrderEdit from './order-edit';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { notify } from 'src/utils/untils';
 import { connection } from 'src/utils/signalR';
+import OrderExport from './order-export';
+import { productActionThunk } from 'src/redux/actions/product-action';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -48,17 +50,19 @@ export default function OrderDetail() {
   const { id } = useParams();
   const { filterOrderId, orders, loading, message, success } = useSelector(
     (x) => x.rootReducer.orders
-  );
+  );  
   const { filterOrder } = filterOrderId;
   const dispatch = useDispatch();
   const shadow = customShadows();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [openExport, setOpenExport] = useState(false);
   const mdUp = useResponsive('up', 'md');
   const smDown = useResponsive('down', 'sm');
 
   useEffect(() => {
     dispatch(orderActionThunk.GetAllOrder());
+    dispatch(productActionThunk.getProductPrices());
     if (id) {
       dispatch(orderActionThunk.FilterOrderDetail({ id }));
       // dispatch(orderActionThunk.cleanMessage());
@@ -117,10 +121,24 @@ export default function OrderDetail() {
   const handleCloseModal = () => {
     setOpen(false);
   };
+  const handleOpenExport = () => {
+    setOpenExport(true);
+  };
+  const handleCloseExport = () => {
+    setOpenExport(false);
+  };
 
   return (
     <Container>
       {open && <OrderEdit open={open} handleClose={handleCloseModal} />}
+      {openExport && (
+        <OrderExport
+          open={openExport}
+          handleClose={handleCloseExport}
+          products={filterOrder}
+          orderSelect={filterDataOrder}
+        />
+      )}
       {filterDataOrder && (
         <>
           <Stack
@@ -147,6 +165,7 @@ export default function OrderDetail() {
             <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end">
               <Button
                 variant="outlined"
+                onClick={handleOpenExport}
                 color="inherit"
                 startIcon={<Iconify icon="material-symbols:print" />}
               >
