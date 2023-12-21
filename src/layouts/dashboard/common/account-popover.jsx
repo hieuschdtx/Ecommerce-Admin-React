@@ -9,29 +9,20 @@ import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 
-import { account } from 'src/_mock/account';
+import { useSelector } from 'react-redux';
+import Iconify from 'src/components/iconify';
 
-// ----------------------------------------------------------------------
-
+const BACKEND_URI = import.meta.env.VITE_BACKEND_URL;
 const MENU_OPTIONS = [
   {
-    label: 'Home',
-    icon: 'eva:home-fill',
-  },
-  {
     label: 'Profile',
-    icon: 'eva:person-fill',
-  },
-  {
-    label: 'Settings',
-    icon: 'eva:settings-2-fill',
+    icon: 'iconamoon:profile-circle-fill',
   },
 ];
 
-// ----------------------------------------------------------------------
-
 export default function AccountPopover() {
   const [open, setOpen] = useState(null);
+  const { user } = useSelector((x) => x.rootReducer.user);
 
   const handleOpen = (event) => {
     setOpen(event.currentTarget);
@@ -56,15 +47,15 @@ export default function AccountPopover() {
         }}
       >
         <Avatar
-          src={account.photoURL}
-          alt={account.displayName}
+          src={user.avatar && `${BACKEND_URI}images/avatars/${user.avatar}`}
+          alt={user.full_name}
           sx={{
             width: 36,
             height: 36,
             border: (theme) => `solid 2px ${theme.palette.background.default}`,
           }}
         >
-          {account.displayName.charAt(0).toUpperCase()}
+          {user.full_name}
         </Avatar>
       </IconButton>
 
@@ -85,10 +76,10 @@ export default function AccountPopover() {
       >
         <Box sx={{ my: 1.5, px: 2 }}>
           <Typography variant="subtitle2" noWrap>
-            {account.displayName}
+            {user.full_name}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
-            {account.email}
+            {user.email}
           </Typography>
         </Box>
 
@@ -96,7 +87,10 @@ export default function AccountPopover() {
 
         {MENU_OPTIONS.map((option) => (
           <MenuItem key={option.label} onClick={handleClose}>
-            {option.label}
+            <Iconify icon={option.icon} />
+            <Typography variant="normal" fontSize={14} ml={0.5}>
+              {option.label}
+            </Typography>
           </MenuItem>
         ))}
 
