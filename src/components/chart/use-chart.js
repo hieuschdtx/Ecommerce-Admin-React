@@ -144,8 +144,8 @@ export default function useChart(options) {
     plotOptions: {
       // Bar
       bar: {
-        borderRadius: smUp ? 3 : 1,
-        columnWidth: '28%',
+        // borderRadius: smUp ? 0 : 1,
+        columnWidth: '55%',
         borderRadiusApplication: 'end',
         borderRadiusWhenStacked: 'last',
       },

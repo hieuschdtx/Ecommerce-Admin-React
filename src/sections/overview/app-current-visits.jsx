@@ -1,17 +1,15 @@
 import PropTypes from 'prop-types';
-
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
+
 import { styled, useTheme } from '@mui/material/styles';
-
 import { fNumber } from 'src/utils/format-number';
-
 import Chart, { useChart } from 'src/components/chart';
-
-// ----------------------------------------------------------------------
+import { useEffect, useState } from 'react';
+import { statistiqueService } from 'src/apis/statistique-service';
+import { customShadows } from 'src/theme/custom-shadows';
 
 const CHART_HEIGHT = 400;
-
 const LEGEND_HEIGHT = 72;
 
 const StyledChart = styled(Chart)(({ theme }) => ({
@@ -26,14 +24,23 @@ const StyledChart = styled(Chart)(({ theme }) => ({
   },
 }));
 
-// ----------------------------------------------------------------------
-
 export default function AppCurrentVisits({ title, subheader, chart, ...other }) {
   const theme = useTheme();
+  const [data, setData] = useState([]);
+  const shadow = customShadows();
 
-  const { colors, series, options } = chart;
+  const { colors, options } = chart;
+  const chartSeries = data.map((i) => i.product_count);
+  const handleGetCountOrderProduct = async () => {
+    const { data } = await statistiqueService.getCountOrderProductByProcategory();
+    if (data.data) {
+      setData(data.data);
+    }
+  };
 
-  const chartSeries = series.map((i) => i.value);
+  useEffect(() => {
+    handleGetCountOrderProduct();
+  }, []);
 
   const chartOptions = useChart({
     chart: {
@@ -42,7 +49,7 @@ export default function AppCurrentVisits({ title, subheader, chart, ...other }) 
       },
     },
     colors,
-    labels: series.map((i) => i.label),
+    labels: data.map((i) => i.category_name),
     stroke: {
       colors: [theme.palette.background.paper],
     },
@@ -62,7 +69,7 @@ export default function AppCurrentVisits({ title, subheader, chart, ...other }) 
       y: {
         formatter: (value) => fNumber(value),
         title: {
-          formatter: (seriesName) => `${seriesName}`,
+          formatter: () => `Số lượng đặt hàng: `,
         },
       },
     },
@@ -79,7 +86,7 @@ export default function AppCurrentVisits({ title, subheader, chart, ...other }) 
   });
 
   return (
-    <Card {...other}>
+    <Card {...other} sx={{ boxShadow: shadow.cards }}>
       <CardHeader title={title} subheader={subheader} sx={{ mb: 5 }} />
 
       <StyledChart

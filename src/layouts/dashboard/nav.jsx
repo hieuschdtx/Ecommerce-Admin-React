@@ -72,8 +72,8 @@ export default function Nav({ openNav, onCloseNav }) {
       <Box sx={{ ml: 2 }}>
         <Typography variant="subtitle2">{user.full_name}</Typography>
 
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {role?.name}
+        <Typography variant="normal" sx={{ color: 'text.secondary' }} fontSize={12}>
+          {role?.name?.toUpperCase()}
         </Typography>
       </Box>
     </Box>
