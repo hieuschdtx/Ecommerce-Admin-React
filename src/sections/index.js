@@ -1,0 +1,13 @@
+export { default as UserView } from './user/user-view';
+export { default as UserDetailView } from './user/user-detail-view';
+export { default as PromotionView } from './promotions/promotion-view';
+export { default as ProductsView } from './products/products-view';
+export { default as ProductAdd } from './products/product-add';
+export { default as ProductCategoriesView } from './product-categories/product-categories-view';
+export { default as AppView } from './overview/app-view';
+export { default as OrdersView } from './oders/orders-view';
+export { default as OrderDetail } from './oders/orders-detail';
+export { default as LoginView } from './login/login-view';
+export { default as NotFoundView } from './error/not-found-view';
+export { default as CategoriesView } from './categories/categories-view';
+export { default as BlogView } from './blog/blog-view';

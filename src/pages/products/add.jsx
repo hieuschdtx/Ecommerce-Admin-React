@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async';
-import ProductAdd from 'src/sections/products/view/product-add';
+import { ProductAdd } from 'src/sections';
 
 export default function ProductAddPage() {
   return (

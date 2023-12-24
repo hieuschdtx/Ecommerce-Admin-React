@@ -1,11 +1,11 @@
 import { Helmet } from 'react-helmet-async';
-import OrderDetail from 'src/sections/oders/view/orders-detail';
+import { OrderDetail } from 'src/sections';
 
 export default function OrderEditPage() {
   return (
     <>
       <Helmet>
-        <title>Orders edit | MeatDeli Admin </title>
+        <title>Chỉnh sửa đơn hàng | MeatDeli Admin </title>
       </Helmet>
       <OrderDetail />
     </>
