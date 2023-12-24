@@ -6,6 +6,7 @@ import productReducer from './reducers/product-reducer';
 import userReducer from './reducers/user-reducer';
 import roleReducer from './reducers/role-reducer';
 import orderReducer from './reducers/order-reducer';
+import newsReducer from './reducers/news-reducer';
 
 const rootReducer = combineReducers({
   category: categorySliceReducer,
@@ -15,6 +16,7 @@ const rootReducer = combineReducers({
   user: userReducer,
   role: roleReducer,
   orders: orderReducer,
+  news: newsReducer,
 });
 
 const store = configureStore({
