@@ -146,7 +146,6 @@ const UserPage = () => {
                       }
                       email={row.email}
                       createdAt={fDateTime(row.created_at, null)}
-                      handleClick={(event) => handleClick(event, row.id)}
                       hanldeGetId={(event) => hanldeGetId(event, row.id)}
                     />
                   ))}
