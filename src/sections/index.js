@@ -11,3 +11,4 @@ export { default as LoginView } from './login/login-view';
 export { default as NotFoundView } from './error/not-found-view';
 export { default as CategoriesView } from './categories/categories-view';
 export { default as BlogView } from './blog/blog-view';
+export { default as BlogDetailPage } from './blog/blog-detail';

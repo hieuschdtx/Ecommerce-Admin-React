@@ -96,7 +96,7 @@ export default function BlogTableRow({
           sx: { width: 140 },
         }}
       >
-        <MenuItem>
+        <MenuItem onClick={handleEditNews}>
           <Iconify icon="eva:edit-fill" sx={{ mr: 2 }} />
           chỉnh sửa
         </MenuItem>
