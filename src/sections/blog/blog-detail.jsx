@@ -23,6 +23,8 @@ import { useRouter } from 'src/routes/hooks';
 import * as yup from 'yup';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import { newsService } from 'src/apis/news-service';
+import { notify } from 'src/utils/untils';
 
 const editorConfig = {
   enterMode: 'CKEditor5.EnterMode.PARAGRAPH',
@@ -65,7 +67,7 @@ const BlogDetailPage = ({ isAdd }) => {
   const router = useRouter();
   const mdUp = useResponsive('up', 'md');
   const dispatch = useDispatch();
-  const editorRef = useRef(null);
+  const editorRef = useRef();
 
   const {
     handleSubmit,
@@ -91,8 +93,8 @@ const BlogDetailPage = ({ isAdd }) => {
   useEffect(() => {
     if (id && !isAdd) {
       const val = { ...defaultValues, ...result };
-      val.image && setSelectedAvatar(`${BACKEND_URL}images/news${val.image}`);
-      reset({ ...val, created_by: user.full_name });
+      setSelectedAvatar(val.image ? `${BACKEND_URL}images/news${val.image}` : '');
+      reset(val);
     }
   }, [id, result]);
 
@@ -110,7 +112,33 @@ const BlogDetailPage = ({ isAdd }) => {
     }
   };
 
-  const handleSubmitForm = () => {};
+  const handleSubmitForm = async (value) => {
+    const formData = new FormData();
+    Object.entries({
+      ...value,
+      created_by: user.full_name,
+      modified_by: user.full_name,
+    }).forEach(([key, item]) => formData.append(key, item));
+
+    if (!isAdd) {
+      const {
+        data: { message, success },
+      } = await newsService.updateUser(formData);
+      notify(message, success);
+      if (success) {
+        setCustomIsDirty(true);
+      }
+    } else {
+      const {
+        data: { message, success },
+      } = await newsService.createNews(formData);
+      notify(message, success);
+      reset(defaultValues);
+      if (editorRef.current) {
+        editorRef.current.editor.setData('');
+      }
+    }
+  };
 
   return (
     <Container>
@@ -211,7 +239,7 @@ const BlogDetailPage = ({ isAdd }) => {
                 <CKEditor
                   id="detail"
                   name="detail"
-                  data={isAdd ? '' : watch('detail')}
+                  data={isAdd ? '' : watch('detail') || ''}
                   editor={ClassicEditor}
                   config={editorConfig}
                   onChange={(event, editor) => {
@@ -228,12 +256,7 @@ const BlogDetailPage = ({ isAdd }) => {
                 justifyContent={mdUp ? 'flex-start' : 'space-between'}
                 spacing={2}
               >
-                <Button
-                  variant="contained"
-                  color="primary"
-                  type="submit"
-                  disabled={isSubmitting || (!isAdd && !isDirty && customIsDirty)}
-                >
+                <Button variant="contained" color="primary" type="submit" disabled={isSubmitting}>
                   {!isAdd ? 'Cập nhật' : 'Thêm mới'}
                 </Button>
                 <Button

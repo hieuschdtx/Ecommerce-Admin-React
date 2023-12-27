@@ -33,7 +33,6 @@ import { useParams } from 'react-router-dom';
 import { productCategoriesActionThunk } from 'src/redux/actions/product-categories-action';
 import { connection } from 'src/utils/signalR';
 import { useResponsive } from 'src/hooks/use-responsive';
-import { primary } from 'src/theme/palette';
 import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import CustomAvatar from 'src/components/avatar/avatar';
