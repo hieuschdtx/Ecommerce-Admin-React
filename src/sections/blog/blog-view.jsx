@@ -24,6 +24,7 @@ import { TableEmptyRow } from 'src/components/table-empty-row';
 import TableNoData from 'src/components/table-no-data/table-no-data';
 import BlogTableRow from './blog-table-row';
 import { fDateTime } from 'src/utils/format-time';
+import { connection } from 'src/utils/signalR';
 
 export default function BlogView() {
   const [filterName, setFilterName] = useState('');
@@ -40,6 +41,12 @@ export default function BlogView() {
   useEffect(() => {
     dispatch(newsActionThunk.getAllNews());
     dispatch(categoryActionThunk.getCategories());
+  }, [dispatch]);
+
+  useEffect(() => {
+    connection.on('RELOAD_DATA_CHANGE', () => {
+      dispatch(newsActionThunk.getAllNews());
+    });
   }, [dispatch]);
 
   useEffect(() => {

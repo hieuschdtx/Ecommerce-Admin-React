@@ -6,6 +6,12 @@ const getAllNews = createAsyncThunk('NEWS_GET_ALL_NEWS', async () => {
   return data;
 });
 
+const getDetailNews = createAsyncThunk('NEWS_GET_DETAILS_NEWS', async (p) => {
+  const { data } = await newsService.getDetails(p);
+  return data;
+});
+
 export const newsActionThunk = {
   getAllNews,
+  getDetailNews,
 };

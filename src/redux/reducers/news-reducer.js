@@ -2,7 +2,8 @@ import { createSlice } from '@reduxjs/toolkit';
 
 import { newsActionThunk } from '../actions/news-action';
 
-const { getAllNews } = newsActionThunk;
+const { getAllNews, getDetailNews } = newsActionThunk;
+const apiState = { loading: false, result: null, success: false, message: null };
 
 const newSlice = createSlice({
   name: 'NEWS',
@@ -11,6 +12,7 @@ const newSlice = createSlice({
     loading: false,
     message: null,
     success: false,
+    getDetail: { ...apiState },
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -32,6 +34,18 @@ const newSlice = createSlice({
         loading: false,
         success: false,
         message: action.error?.message,
+      }))
+      .addCase(getDetailNews.pending, (state) => ({
+        ...state,
+        getDetail: { ...apiState, loading: true, success: false, message: null },
+      }))
+      .addCase(getDetailNews.fulfilled, (state, action) => ({
+        ...state,
+        getDetail: { ...apiState, loading: false, result: action.payload, success: true },
+      }))
+      .addCase(getDetailNews.rejected, (state, action) => ({
+        ...state,
+        getDetail: { ...apiState, loading: false, message: action.error?.message, success: false },
       }));
   },
 });
