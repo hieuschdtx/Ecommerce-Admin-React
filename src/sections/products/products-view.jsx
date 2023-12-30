@@ -50,6 +50,8 @@ export default function ProductsView() {
 
   useEffect(() => {
     connection.on('RELOAD_DATA_CHANGE', () => {
+      dispatch(productActionThunk.getProductPrices());
+      dispatch(productCategoriesActionThunk.getproductCategories());
       dispatch(productActionThunk.getProduct());
     });
   }, [dispatch]);

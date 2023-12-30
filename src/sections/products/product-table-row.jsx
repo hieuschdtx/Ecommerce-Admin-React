@@ -10,10 +10,13 @@ import {
 } from '@mui/material';
 import PropTypes from 'prop-types';
 import { useState } from 'react';
+import { productService } from 'src/apis/product-service';
 import Iconify from 'src/components/iconify';
 import Label from 'src/components/label';
+import ModalDelete from 'src/components/modal-delete/modal-delete';
 import { useRouter } from 'src/routes/hooks';
 import { error, success } from 'src/theme/palette';
+import { notify } from 'src/utils/untils';
 
 export default function ProductTableRow({
   name,
@@ -26,6 +29,9 @@ export default function ProductTableRow({
 }) {
   const [open, setOpen] = useState(null);
   const router = useRouter();
+  const [openModalDelete, setOpenModalDelete] = useState(false);
+
+  const [id, setId] = useState(null);
 
   const handleOpenMenu = (event) => {
     setOpen(event.currentTarget);
@@ -39,6 +45,24 @@ export default function ProductTableRow({
     const productId = hanldeGetId(event);
     setOpen(null);
     router.push(`${productId}/edit`);
+  };
+
+  const handleDeleteModal = async (event) => {
+    const productId = hanldeGetId(event);
+
+    setId(productId);
+    setOpenModalDelete(true);
+    setOpen(null);
+  };
+
+  const handleDeleteProduct = async () => {
+    if (id) {
+      const {
+        data: { message, success },
+      } = await productService.deleteProduct({ id });
+      notify(message, success);
+    }
+    setId(null);
   };
 
   const renderDiscount = (
@@ -58,6 +82,11 @@ export default function ProductTableRow({
 
   return (
     <>
+      <ModalDelete
+        open={openModalDelete}
+        handleClose={() => setOpenModalDelete(false)}
+        handleAccept={handleDeleteProduct}
+      />
       <TableRow hover tabIndex={-1} role="checkbox">
         <TableCell component="th" scope="row" padding="normal">
           <Stack direction="row" alignItems="center" spacing={2}>
@@ -132,7 +161,7 @@ export default function ProductTableRow({
           chỉnh sửa
         </MenuItem>
 
-        <MenuItem sx={{ color: 'error.main' }}>
+        <MenuItem sx={{ color: 'error.main' }} onClick={(event) => handleDeleteModal(event)}>
           <Iconify icon="eva:trash-2-outline" sx={{ mr: 2 }} />
           Xóa
         </MenuItem>

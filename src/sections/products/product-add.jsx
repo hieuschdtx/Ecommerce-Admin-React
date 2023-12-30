@@ -71,15 +71,15 @@ const schema = Yup.object()
   .shape({
     name: Yup.string().required('Tên sản phẩm không được để trống'),
     product_category_id: Yup.string().required('Vui lòng chọn danh mục hiển thị'),
-    price: Yup.number()
+    price: Yup.string()
       .typeError('Giá phải là số')
       .required('Vui lòng nhập giá sản phẩm')
       .min(0, 'Giá phải lớn hơn 0'),
-    weight: Yup.number()
+    weight: Yup.string()
       .typeError('Khối lượng phải là số')
       .required('Vui lòng nhập khối lượng sản phẩm')
       .min(0, 'Khối lượng phải lớn hơn 0'),
-    stock: Yup.number()
+    stock: Yup.string()
       .typeError('Số lượng phải là số')
       .required('Vui lòng nhập số lượng')
       .min(0, 'Số lượng phải lớn hơn 0'),
