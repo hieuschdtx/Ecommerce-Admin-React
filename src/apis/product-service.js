@@ -21,4 +21,5 @@ export const productService = {
     await callApi(`${URI}update-price?id=${p.get('id')}`, methods.put, multipart, p),
   UpdateProduct: async (p) =>
     await callApi(`${URI}update?id=${p.get('id')}`, methods.put, multipart, p),
+  deleteProduct: async (p) => await callApi(`${URI}${p.id}/detele`, methods.delete, json, null),
 };
